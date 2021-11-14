@@ -71,7 +71,7 @@ export default {
             this.url = res
           }).catch(err => {
             this.loading = false
-            console.log(err.response.data.message)
+            console.log(err.response.data.description)
           })
         } else {
           return false

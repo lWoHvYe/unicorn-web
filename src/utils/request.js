@@ -45,8 +45,17 @@ service.interceptors.response.use(
       }
     } else {
       let code = 0
+      let errorMsg = ''
       try {
+        // 兼容通用返回与原版返回
         code = error.response.data.status
+        if (!code) {
+          code = error.response.data.businessCode
+        }
+        errorMsg = error.response.data.message
+        if (!errorMsg) {
+          errorMsg = error.response.data.description
+        }
       } catch (e) {
         if (error.toString().indexOf('Error: timeout') !== -1) {
           Notification.error({
@@ -67,7 +76,6 @@ service.interceptors.response.use(
         } else if (code === 403) {
           router.push({ path: '/401' })
         } else {
-          const errorMsg = error.response.data.message
           if (errorMsg !== undefined) {
             Notification.error({
               title: errorMsg,

@@ -61,10 +61,46 @@ export default {
         value: Cookies.get('theme')
       })
     }
+    // 初始化后即建立连接
+    this.initWebSocket()
   },
   methods: {
     handleClickOutside() {
       this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+    },
+    // 4 webSocket
+    initWebSocket() {
+      const wsUri = process.env.VUE_APP_WS_API + '/webSocket/sysMember'
+      this.websock = new WebSocket(wsUri)
+      this.websock.onerror = this.webSocketOnError
+      this.websock.onmessage = this.webSocketOnMessage
+    },
+    webSocketOnError(e) {
+      this.$notify({
+        title: 'WebSocket连接发生错误',
+        type: 'error',
+        duration: 0
+      })
+    },
+    webSocketOnMessage(e) {
+      const data = JSON.parse(e.data)
+      if (data.msgType === 'INFO') {
+        this.$notify({
+          title: '系统通知 🦄️',
+          message: data.msg,
+          type: 'success',
+          dangerouslyUseHTMLString: true,
+          duration: 5500
+        })
+      } else if (data.msgType === 'ERROR') {
+        this.$notify({
+          title: '系统通知 ❌',
+          message: data.msg,
+          dangerouslyUseHTMLString: true,
+          type: 'error',
+          duration: 0
+        })
+      }
     }
   }
 }

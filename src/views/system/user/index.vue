@@ -115,7 +115,7 @@
                 >{{ item.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
-            <el-form-item style="margin-bottom: 0;" label="角色" prop="roles">
+            <el-form-item style="margin-bottom: 20px;" label="角色" prop="roles">
               <el-select
                 v-model="roleDatas"
                 style="width: 437px"
@@ -132,6 +132,14 @@
                   :value="item.id"
                 />
               </el-select>
+            </el-form-item>
+            <el-form-item label="描述">
+              <el-input
+                v-model="form.description"
+                :autosize="{ minRows: 2, maxRows: 4 }"
+                type="textarea"
+                placeholder="Please input"
+              />
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -205,7 +213,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 let userRoles = []
 let userJobs = []
-const defaultForm = { id: null, username: null, nickName: null, gender: '男', email: null, enabled: 'false', roles: [], jobs: [], dept: { id: null }, phone: null }
+const defaultForm = { id: null, username: null, nickName: null, gender: '男', email: null, enabled: 'false', roles: [], jobs: [], dept: { id: null }, phone: null, description: null }
 export default {
   name: 'User',
   components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
@@ -448,7 +456,7 @@ export default {
     // 获取弹窗内角色数据
     getRoles() {
       getAll().then(res => {
-        this.roles = res
+        this.roles = res.content
       }).catch(() => { })
     },
     // 获取弹窗内岗位数据

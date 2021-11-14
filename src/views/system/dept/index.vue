@@ -228,7 +228,7 @@ export default {
           this.crud.notify(this.dict.label.dept_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
         }).catch(err => {
           data.enabled = !data.enabled
-          console.log(err.response.data.message)
+          console.log(err.response.data.description)
         })
       }).catch(() => {
         data.enabled = !data.enabled

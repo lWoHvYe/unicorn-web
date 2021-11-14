@@ -160,7 +160,7 @@ export default {
         this.url = res.url
       }).catch(err => {
         this.downloadLoading = false
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     },
     // 同步数据
@@ -177,7 +177,7 @@ export default {
         this.crud.toQuery()
       }).catch(err => {
         this.icon = 'el-icon-refresh'
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     }
   }

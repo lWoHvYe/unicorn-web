@@ -260,7 +260,7 @@ export default {
         this.columnLoading = false
       }).catch(err => {
         this.columnLoading = false
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     },
     doSubmit() {
@@ -274,7 +274,7 @@ export default {
             this.configLoading = false
           }).catch(err => {
             this.configLoading = false
-            console.log(err.response.data.message)
+            console.log(err.response.data.description)
           })
         }
       })
@@ -299,11 +299,11 @@ export default {
           this.notify('生成成功', 'success')
         }).catch(err => {
           this.genLoading = false
-          console.log(err.response.data.message)
+          console.log(err.response.data.description)
         })
       }).catch(err => {
         this.genLoading = false
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     }
   }

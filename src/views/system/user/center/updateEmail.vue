@@ -93,7 +93,7 @@ export default {
         }).catch(err => {
           this.resetForm()
           this.codeLoading = false
-          console.log(err.response.data.message)
+          console.log(err.response.data.description)
         })
       }
     },
@@ -112,7 +112,7 @@ export default {
             store.dispatch('GetInfo').then(() => {})
           }).catch(err => {
             this.loading = false
-            console.log(err.response.data.message)
+            console.log(err.response.data.description)
           })
         } else {
           return false

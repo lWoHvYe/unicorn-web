@@ -158,7 +158,7 @@ export default {
   },
   created() {
     crudRoles.getLevel().then(data => {
-      this.level = data.level
+      this.level = data.resultMap.level
     })
   },
   methods: {
@@ -263,7 +263,7 @@ export default {
         this.update()
       }).catch(err => {
         this.menuLoading = false
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     },
     // 改变数据

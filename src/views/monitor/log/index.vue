@@ -86,7 +86,7 @@ export default {
           this.crud.toQuery()
         }).catch(err => {
           this.crud.delAllLoading = false
-          console.log(err.response.data.message)
+          console.log(err.response.data.description)
         })
       }).catch(() => {
       })

@@ -96,7 +96,7 @@ export default {
           })
           .catch(err => {
             this.submitLoading = false
-            console.log('error:' + err.response.data.message)
+            console.log('error:' + err.response.data.description)
           })
       }
     }

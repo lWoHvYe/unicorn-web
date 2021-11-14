@@ -194,7 +194,7 @@ export default {
         .then(res => {
         })
         .catch(err => {
-          console.log('error:' + err.response.data.message)
+          console.log('error:' + err.response.data.description)
         })
     },
     stopServer() {
@@ -202,7 +202,7 @@ export default {
         .then(res => {
         })
         .catch(err => {
-          console.log('error:' + err.response.data.message)
+          console.log('error:' + err.response.data.description)
         })
     },
     serverStatus() {
@@ -210,7 +210,7 @@ export default {
         .then(res => {
         })
         .catch(err => {
-          console.log('error:' + err.response.data.message)
+          console.log('error:' + err.response.data.description)
         })
     },
     initSelect() {

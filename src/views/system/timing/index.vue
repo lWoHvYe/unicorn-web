@@ -166,7 +166,7 @@ export default {
       crudJob.execution(id).then(res => {
         this.crud.notify('执行成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
       }).catch(err => {
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     },
     // 改变状态
@@ -178,7 +178,7 @@ export default {
         this.crud.toQuery()
         this.crud.notify(status + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
       }).catch(err => {
-        console.log(err.response.data.message)
+        console.log(err.response.data.description)
       })
     },
     updateParams(id) {
