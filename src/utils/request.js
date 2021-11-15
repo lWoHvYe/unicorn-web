@@ -52,9 +52,15 @@ service.interceptors.response.use(
         if (!code) {
           code = error.response.data.businessCode
         }
+        if (!code) {
+          code = error.response.status
+        }
         errorMsg = error.response.data.message
         if (!errorMsg) {
           errorMsg = error.response.data.description
+        }
+        if (!errorMsg) {
+          errorMsg = error.response.data
         }
       } catch (e) {
         if (error.toString().indexOf('Error: timeout') !== -1) {
