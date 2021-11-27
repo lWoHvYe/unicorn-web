@@ -9,7 +9,7 @@ export function resetEmail(data) {
 
 export function updatePass(pass) {
   return request({
-    url: 'api/users/updatePass/' + pass,
+    url: 'api/sys/users/updatePass/' + pass,
     method: 'get'
   })
 }
