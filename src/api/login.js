@@ -1,14 +1,13 @@
 import request from '@/utils/request'
 
-export function login(username, password, code, uuid) {
+export function login(username, password, captchaVerification) {
   return request({
     url: 'auth/login',
     method: 'post',
     data: {
       username,
       password,
-      code,
-      uuid
+      captchaVerification
     }
   })
 }
