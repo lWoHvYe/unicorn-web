@@ -238,7 +238,7 @@ export default {
     this.$nextTick(() => {
       this.init()
       get(this.tableName).then(data => {
-        this.form = data
+        this.form = data.result
         this.form.cover = this.form.cover.toString()
       })
       getDicts().then(data => {
