@@ -62,7 +62,7 @@
             <el-table-column prop="level" label="角色级别" />
             <el-table-column :show-overflow-tooltip="true" prop="description" label="描述" />
             <el-table-column :show-overflow-tooltip="true" width="135px" prop="createTime" label="创建日期" />
-            <el-table-column v-if="checkPer(['admin','roles:edit','roles:del'])" label="操作" width="130px" align="center" fixed="right">
+            <el-table-column label="操作" width="130px" align="center" fixed="right">
               <template slot-scope="scope">
                 <udOperation
                   v-if="scope.row.level >= level"
@@ -165,7 +165,7 @@ export default {
     getMenuDatas(node, resolve) {
       setTimeout(() => {
         getMenusTree(node.data.id ? node.data.id : 0).then(res => {
-          resolve(res)
+          resolve(res.content)
         })
       }, 100)
     },
@@ -228,7 +228,8 @@ export default {
     },
     menuChange(menu) {
       // 获取该节点的所有子节点，id 包含自身
-      getChild(menu.id).then(childIds => {
+      getChild(menu.id).then(res => {
+        const childIds = res.content
         // 判断是否在 menuIds 中，如果存在则删除，否则添加
         if (this.menuIds.indexOf(menu.id) !== -1) {
           for (let i = 0; i < childIds.length; i++) {

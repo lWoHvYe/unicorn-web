@@ -231,7 +231,8 @@ export default {
   },
   methods: {
     init() {
-      initData(this.url, {}).then(data => {
+      initData(this.url, {}).then(dataMap => {
+        var data = dataMap.resultMap
         this.data = data
         this.show = true
         if (this.cpuInfo.xAxis.data.length >= 8) {
