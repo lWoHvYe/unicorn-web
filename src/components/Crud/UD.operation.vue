@@ -1,7 +1,10 @@
 <template>
   <div>
-    <el-button v-permission="permission.edit" :loading="crud.status.cu === 2" :disabled="disabledEdit" size="mini" type="primary" icon="el-icon-edit" @click="crud.toEdit(data)" />
-    <el-popover v-model="pop" v-permission="permission.del" placement="top" width="180" trigger="manual" @show="onPopoverShow" @hide="onPopoverHide">
+    <!--<el-button v-permission="permission.edit" :loading="crud.status.cu === 2" :disabled="disabledEdit" size="mini" type="primary" icon="el-icon-edit" @click="crud.toEdit(data)" />-->
+    <el-button :loading="crud.status.cu === 2" :disabled="disabledEdit" size="mini" type="primary" icon="el-icon-edit" @click="crud.toEdit(data)" />
+    <!--默认显示所有button，由后端control access-->
+    <!--<el-popover v-model="pop" v-permission="permission.del" placement="top" width="180" trigger="manual" @show="onPopoverShow" @hide="onPopoverHide">-->
+    <el-popover v-model="pop" placement="top" width="180" trigger="manual" @show="onPopoverShow" @hide="onPopoverHide">
       <p>{{ msg }}</p>
       <div style="text-align: right; margin: 0">
         <el-button size="mini" type="text" @click="doCancel">取消</el-button>
@@ -13,6 +16,7 @@
 </template>
 <script>
 import CRUD, { crud } from '@crud/crud'
+
 export default {
   mixins: [crud()],
   props: {
