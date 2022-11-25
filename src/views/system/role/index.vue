@@ -84,7 +84,6 @@
               <span class="role-span">菜单分配</span>
             </el-tooltip>
             <el-button
-              v-permission="['admin','roles:edit']"
               :disabled="!showButton"
               :loading="menuLoading"
               icon="el-icon-check"
