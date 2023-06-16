@@ -314,7 +314,7 @@ function CRUD(options) {
         if (delAll) {
           crud.delAllLoading = false
         } else dataStatus.delete = CRUD.STATUS.PREPARED
-        crud.dleChangePage(1)
+        crud.dleChangePage(1, ids)
         crud.delSuccessNotify()
         callVmHook(crud, CRUD.HOOK.afterDelete, data)
         crud.refresh()
@@ -367,8 +367,8 @@ function CRUD(options) {
       crud.refresh()
     },
     // 预防删除第二页最后一条数据时，或者多选删除第二页的数据时，页码错误导致请求无数据
-    dleChangePage(size) {
-      if (crud.data.length === size && crud.page.page !== 1) {
+    dleChangePage(size, ids) {
+      if (crud.data.length === ids.length && crud.page.page !== 1) {
         crud.page.page -= 1
       }
     },
@@ -399,7 +399,9 @@ function CRUD(options) {
     resetForm(data) {
       const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
       const crudFrom = crud.form
+      // eslint-disable-next-line no-unused-vars
       for (const key in form) {
+        // eslint-disable-next-line no-prototype-builtins
         if (crudFrom.hasOwnProperty(key)) {
           crudFrom[key] = form[key]
         } else {
@@ -617,7 +619,9 @@ function mergeOptions(src, opts) {
   const optsRet = {
     ...src
   }
+  // eslint-disable-next-line no-unused-vars
   for (const key in src) {
+    // eslint-disable-next-line no-prototype-builtins
     if (opts.hasOwnProperty(key)) {
       optsRet[key] = opts[key]
     }
@@ -675,6 +679,7 @@ function presenter(crud) {
       parseTime
     },
     created() {
+      // eslint-disable-next-line no-unused-vars
       for (const k in this.$crud) {
         if (this.$crud[k].queryOnPresenterCreated) {
           this.$crud[k].toQuery()
@@ -682,6 +687,7 @@ function presenter(crud) {
       }
     },
     destroyed() {
+      // eslint-disable-next-line no-unused-vars
       for (const k in this.$crud) {
         this.$crud[k].unregisterVM('presenter', this)
       }

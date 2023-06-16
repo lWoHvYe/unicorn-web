@@ -109,7 +109,7 @@
             <el-form-item label="状态">
               <el-radio-group v-model="form.enabled" :disabled="form.id === user.id">
                 <el-radio
-                  v-for="item in dict.user_status"
+                  v-for="item in dict.status"
                   :key="item.id"
                   :label="item.value"
                 >{{ item.label }}</el-radio>
@@ -220,7 +220,7 @@ export default {
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   // 数据字典
-  dicts: ['user_status'],
+  dicts: ['status'],
   data() {
     // 自定义验证
     const validPhone = (rule, value, callback) => {
@@ -443,13 +443,13 @@ export default {
     },
     // 改变状态
     changeEnabled(data, val) {
-      this.$confirm('此操作将 "' + this.dict.label.user_status[val] + '" ' + data.username + ', 是否继续？', '提示', {
+      this.$confirm('此操作将 "' + this.dict.label.status[val] + '" ' + data.username + ', 是否继续？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         crudUser.edit(data).then(res => {
-          this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
+          this.crud.notify(this.dict.label.status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
         }).catch(() => {
           data.enabled = !data.enabled
         })
