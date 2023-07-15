@@ -64,12 +64,13 @@
      * */
 import { aesEncrypt } from './../utils/ase'
 import { resetSize } from './../utils/util'
-import { reqGet, reqCheck } from '../../../../api/system/verifyCode'
+import { reqGet, reqCheck } from '@/api/system/verifyCode'
 
 //  "captchaType":"blockPuzzle",
 export default {
   name: 'VerifySlide',
   props: {
+    // eslint-disable-next-line vue/require-default-prop
     captchaType: {
       type: String
     },
