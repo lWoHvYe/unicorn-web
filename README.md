@@ -21,9 +21,6 @@ ELADMIN 前端源码
 
 #### Build Setup
 ``` bash
-# 配置镜像加速
-https://www.ydyno.com/archives/1219.html
-
 # 安装依赖
 npm install
 
@@ -47,6 +44,12 @@ npm run build:prod
 2、加速node-sass安装
 
 https://www.ydyno.com/archives/1219.html
+
+3、其他
+```shell
+node -v -> node@16.13.0
+```
+https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported
 
 #### 特别鸣谢
 
