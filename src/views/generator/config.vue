@@ -242,7 +242,7 @@ export default {
         this.form.cover = this.form.cover.toString()
       })
       getDicts().then(data => {
-        this.dicts = data
+        this.dicts = data.content
       })
     })
   },
