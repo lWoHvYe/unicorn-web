@@ -14,7 +14,10 @@
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="520px">
       <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="80px">
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" style="width: 380px;" />
+          <el-input v-model="form.name" style="width: 145px;" />
+        </el-form-item>
+        <el-form-item label="角色标识" prop="name">
+          <el-input v-model="form.code" style="width: 145px;" />
         </el-form-item>
         <el-form-item label="角色级别" prop="level">
           <el-input-number v-model.number="form.level" :min="1" controls-position="right" style="width: 145px;" />
@@ -126,7 +129,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 import DateRangePicker from '@/components/DateRangePicker'
 
-const defaultForm = { id: null, name: null, depts: [], description: null, dataScope: '全部', level: 3 }
+const defaultForm = { id: null, name: null, code: null, depts: [], description: null, dataScope: '全部', level: 3 }
 export default {
   name: 'Role',
   components: { Treeselect, pagination, crudOperation, rrOperation, udOperation, DateRangePicker },
