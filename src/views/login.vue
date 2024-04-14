@@ -5,6 +5,7 @@
         EL-ADMIN 后台管理系统
       </h3>
       <el-form-item prop="username">
+        <!--   v-model是View和Model间的双向绑定，v-text,v-html,v-bind都是单向绑定     -->
         <el-input v-model="loginForm.username" type="text" auto-complete="off" placeholder="账号">
           <svg-icon slot="prefix" icon-class="user" class="el-input__icon input-icon" />
         </el-input>
@@ -31,6 +32,7 @@
       <span> ⋅ </span>
       <a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank">{{ $store.state.settings.caseNumber }}</a>
     </div>
+    <!--  :mode是 v-bind:mode的缩写，@verifySuccess是v-on:verifySuccess的缩写  -->
     <Verify
       ref="verify"
       :mode="'pop'"
