@@ -26,6 +26,7 @@
         </el-col>
       </el-row>
     </div>
+    <Live2DWidget />
   </div>
 </template>
 
@@ -36,6 +37,7 @@ import LineChart from './dashboard/LineChart'
 import RadarChart from '@/components/Echarts/RadarChart'
 import PieChart from '@/components/Echarts/PieChart'
 import BarChart from '@/components/Echarts/BarChart'
+import Live2DWidget from '@/components/Live2D/Live2DWidget.vue'
 
 const lineChartData = {
   newVisitis: {
@@ -59,6 +61,7 @@ const lineChartData = {
 export default {
   name: 'Dashboard',
   components: {
+    Live2DWidget,
     GithubCorner,
     PanelGroup,
     LineChart,
