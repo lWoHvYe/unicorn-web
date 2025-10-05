@@ -48,6 +48,7 @@ https://www.ydyno.com/archives/1219.html
 3、其他
 ```shell
 node -v -> node@16.13.0
+# 若更高的版本，可简单添加环境变量 NODE_OPTIONS=--openssl-legacy-provider 在node@22.20.0可以正常运行
 ```
 https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported
 
