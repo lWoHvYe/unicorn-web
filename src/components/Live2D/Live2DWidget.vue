@@ -14,13 +14,22 @@ const TOOLS = ['hitokoto', 'asteroids', 'switch-model', 'switch-texture', 'photo
 
 const normalizeBase = base => base.endsWith('/') ? base : `${base}/`
 
+const LOAD_TIMEOUT = 10000
+
 function loadStyle(href) {
   return new Promise((resolve, reject) => {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
     link.href = href
-    link.onload = () => resolve()
-    link.onerror = () => reject(new Error(`Failed to load ${href}`))
+    const timer = setTimeout(() => reject(new Error(`Timeout loading ${href}`)), LOAD_TIMEOUT)
+    link.onload = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    link.onerror = () => {
+      clearTimeout(timer)
+      reject(new Error(`Failed to load ${href}`))
+    }
     document.head.appendChild(link)
   })
 }
@@ -30,8 +39,15 @@ function loadScript(src) {
     const script = document.createElement('script')
     script.src = src
     script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error(`Failed to load ${src}`))
+    const timer = setTimeout(() => reject(new Error(`Timeout loading ${src}`)), LOAD_TIMEOUT)
+    script.onload = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    script.onerror = () => {
+      clearTimeout(timer)
+      reject(new Error(`Failed to load ${src}`))
+    }
     document.head.appendChild(script)
   })
 }
@@ -57,11 +73,14 @@ export default {
       if (typeof window === 'undefined') {
         return
       }
+      console.info('[Live2D] 组件已挂载，开始初始化')
       if (window.__live2d_loaded__) {
+        console.info('[Live2D] 已加载，跳过重复初始化')
         this.applyPosition()
         return
       }
       if (window.__live2d_loading__) {
+        console.info('[Live2D] 正在加载中，跳过')
         return
       }
       window.__live2d_loading__ = true
@@ -74,6 +93,7 @@ export default {
       try {
         for (const base of bases) {
           try {
+            console.info(`[Live2D] 尝试加载资源：${base}`)
             await loadStyle(`${base}waifu.css`)
             await loadScript(`${base}live2d.min.js`)
             await loadScript(`${base}waifu-tips.js`)
@@ -83,9 +103,11 @@ export default {
             if (document.getElementById('waifu')) {
               window.__live2d_loaded__ = true
               this.applyPosition()
+              this.ensureVisible()
               return
             }
             await this.selectModel(modelCdn)
+            console.info('[Live2D] 调用 initWidget')
             window.initWidget({
               waifuPath: `${base}waifu-tips.json`,
               cdnPath: modelCdn,
@@ -93,6 +115,8 @@ export default {
             })
             window.__live2d_loaded__ = true
             this.applyPosition()
+            this.ensureVisible()
+            console.info(`[Live2D] 看板娘加载完成：${base}`)
             return
           } catch (error) {
             lastError = error
@@ -105,23 +129,43 @@ export default {
       }
     },
     async selectModel(modelCdn) {
-      // 若用户之前手动切换过模型，则尊重 localStorage；否则默认使用 shizuku
-      if (localStorage.getItem('modelId') !== null) {
-        return
-      }
+      // 清除"上次关闭"状态，避免 initWidget 只显示一个不显眼的召回按钮
+      localStorage.removeItem('waifu-display')
+      let list = null
       try {
         const response = await fetch(`${modelCdn}model_list.json`)
-        if (!response.ok) {
-          return
+        if (response.ok) {
+          list = await response.json()
         }
-        const list = await response.json()
-        const index = (list.models || []).findIndex(item => JSON.stringify(item).toLowerCase().includes(this.model.toLowerCase()))
+      } catch (error) {
+        console.warn('[Live2D] 模型列表加载失败，使用默认模型', error)
+      }
+      if (!list || !Array.isArray(list.models)) {
+        return
+      }
+      const current = localStorage.getItem('modelId')
+      if (current !== null) {
+        const index = Number(current)
+        if (!Number.isInteger(index) || index < 0 || index >= list.models.length) {
+          console.warn(`[Live2D] 本地模型索引 ${current} 无效，重置为默认模型`)
+          localStorage.removeItem('modelId')
+          localStorage.removeItem('modelTexturesId')
+        }
+      }
+      if (localStorage.getItem('modelId') === null) {
+        const index = list.models.findIndex(item => JSON.stringify(item).toLowerCase().includes(this.model.toLowerCase()))
         if (index >= 0) {
           localStorage.setItem('modelId', String(index))
           localStorage.setItem('modelTexturesId', '0')
         }
-      } catch (error) {
-        // 模型列表不可用时使用 live2d-widget 的默认模型
+      }
+      console.info(`[Live2D] 使用模型索引：${localStorage.getItem('modelId')}`)
+    },
+    ensureVisible() {
+      const waifu = document.getElementById('waifu')
+      if (waifu) {
+        waifu.style.display = ''
+        waifu.style.bottom = '0'
       }
     },
     applyPosition() {
