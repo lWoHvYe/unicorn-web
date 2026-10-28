@@ -3,23 +3,23 @@
     <div class="head-container">
       <Search />
       <crudOperation>
-        <el-button
-          slot="left"
+        <template #left><el-button
+
           class="filter-item"
           type="danger"
           icon="el-icon-delete"
-          size="mini"
+          size="small"
           :loading="crud.delAllLoading"
           @click="confirmDelAll()"
         >
           清空
-        </el-button>
+        </el-button></template>
       </crudOperation>
     </div>
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="expand">
-        <template slot-scope="props">
+        <template #default="props">
           <el-form label-position="left" inline class="demo-table-expand">
             <el-form-item label="请求方法">
               <span>{{ props.row.method }}</span>
@@ -37,12 +37,12 @@
       <el-table-column prop="browser" label="浏览器" />
       <el-table-column prop="createTime" label="创建日期" />
       <el-table-column label="异常详情" width="100px">
-        <template slot-scope="scope">
-          <el-button size="mini" type="text" @click="info(scope.row.id)">查看详情</el-button>
+        <template #default="scope">
+          <el-button size="small" link type="primary" @click="info(scope.row.id)">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog :visible.sync="dialog" title="异常详情" append-to-body top="30px" width="85%">
+    <el-dialog v-model="dialog" title="异常详情" append-to-body top="30px" width="85%">
       <pre v-highlightjs="errorInfo"><code class="java" /></pre>
     </el-dialog>
     <!--分页组件-->
@@ -124,7 +124,7 @@ export default {
 .demo-table-expand .el-form-item__content {
   font-size: 12px;
 }
-/deep/ .el-dialog__body {
+:deep(.el-dialog__body) {
   padding: 0 20px 10px 20px !important;
 }
 .java.hljs {

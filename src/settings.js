@@ -1,8 +1,12 @@
-module.exports = {
+const settings = {
   /**
    * @description 网站标题
    */
   title: 'EL-ADMIN',
+  /**
+   * @description 默认主题色
+   */
+  theme: '#1890ff',
   /**
    * @description 是否显示 tagsView
    */
@@ -16,7 +20,7 @@ module.exports = {
    */
   tokenCookieExpires: 1,
   /**
-   * @description 记住密码状态下的密码在Cookie中存储的天数，默认1天s
+   * @description 记住密码状态下的密码在Cookie中存储的天数，默认1天
    */
   passCookieExpires: 1,
   /**
@@ -48,3 +52,5 @@ module.exports = {
    */
   caseNumber: '浙ICP备18005431号'
 }
+
+export default settings

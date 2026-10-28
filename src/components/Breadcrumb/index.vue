@@ -10,8 +10,6 @@
 </template>
 
 <script>
-import pathToRegexp from 'path-to-regexp'
-
 export default {
   data() {
     return {
@@ -52,8 +50,10 @@ export default {
     pathCompile(path) {
       // To solve this problem https://github.com/PanJiaChen/vue-element-admin/issues/561
       const { params } = this.$route
-      var toPath = pathToRegexp.compile(path)
-      return toPath(params)
+      return path.replace(/:([A-Za-z0-9_]+)(\([^)]*\))?/g, (match, key) => {
+        const value = params[key]
+        return value === undefined || value === null ? '' : encodeURIComponent(value)
+      })
     },
     handleLink(item) {
       const { redirect, path } = item

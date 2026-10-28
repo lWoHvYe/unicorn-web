@@ -1,9 +1,10 @@
-import variables from '@/assets/styles/element-variables.scss'
+import Cookies from 'js-cookie'
 import defaultSettings from '@/settings'
-const { tagsView, fixedHeader, sidebarLogo, uniqueOpened, showFooter, footerTxt, caseNumber } = defaultSettings
+
+const { tagsView, fixedHeader, sidebarLogo, uniqueOpened, showFooter, footerTxt, caseNumber, theme } = defaultSettings
 
 const state = {
-  theme: variables.theme,
+  theme: Cookies.get('theme') || theme,
   showSettings: false,
   tagsView: tagsView,
   fixedHeader: fixedHeader,
@@ -16,7 +17,7 @@ const state = {
 
 const mutations = {
   CHANGE_SETTING: (state, { key, value }) => {
-    // eslint-disable-next-line no-prototype-builtins
+
     if (state.hasOwnProperty(key)) {
       state[key] = value
     }
@@ -35,4 +36,3 @@ export default {
   mutations,
   actions
 }
-

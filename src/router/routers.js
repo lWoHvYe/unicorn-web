@@ -1,23 +1,21 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import Layout from '../layout/index'
 
-Vue.use(Router)
-
 export const constantRouterMap = [
-  { path: '/login',
+  {
+    path: '/login',
     meta: { title: '登录', noCache: true },
-    component: (resolve) => require(['@/views/login'], resolve),
+    component: () => import('@/views/login.vue'),
     hidden: true
   },
   {
     path: '/404',
-    component: (resolve) => require(['@/views/features/404'], resolve),
+    component: () => import('@/views/features/404.vue'),
     hidden: true
   },
   {
     path: '/401',
-    component: (resolve) => require(['@/views/features/401'], resolve),
+    component: () => import('@/views/features/401.vue'),
     hidden: true
   },
   {
@@ -26,8 +24,8 @@ export const constantRouterMap = [
     hidden: true,
     children: [
       {
-        path: '/redirect/:path*',
-        component: (resolve) => require(['@/views/features/redirect'], resolve)
+        path: ':path(.*)',
+        component: () => import('@/views/features/redirect.vue')
       }
     ]
   },
@@ -38,7 +36,7 @@ export const constantRouterMap = [
     children: [
       {
         path: 'dashboard',
-        component: (resolve) => require(['@/views/home'], resolve),
+        component: () => import('@/views/home.vue'),
         name: 'Dashboard',
         meta: { title: '首页', icon: 'index', affix: true, noCache: true }
       }
@@ -52,18 +50,24 @@ export const constantRouterMap = [
     children: [
       {
         path: 'center',
-        component: (resolve) => require(['@/views/system/user/center'], resolve),
+        component: () => import('@/views/system/user/center.vue'),
         name: '个人中心',
         meta: { title: '个人中心' }
       }
     ]
+  },
+  {
+    // 兜底路由：使用组件而不是 redirect，保证刷新动态路由时仍能保留原始地址，
+    // 待权限菜单加载完成后再重新匹配到真实路由。
+    path: '/:pathMatch(.*)*',
+    component: () => import('@/views/features/404.vue'),
+    hidden: true
   }
 ]
 
-export default new Router({
+export default createRouter({
   // 使用hash模式
-  mode: 'hash',
-  // mode: 'history',
-  scrollBehavior: () => ({ y: 0 }),
+  history: createWebHashHistory(),
+  scrollBehavior: () => ({ top: 0 }),
   routes: constantRouterMap
 })

@@ -162,14 +162,16 @@ export default {
       this.delLoading = true
       this.crudMethod.del(id).then(() => {
         this.delLoading = false
-        this.$refs[id].doClose()
+        const popover = this.$refs['popover-' + id]
+        popover && popover.hide && popover.hide()
         this.dleChangePage()
         this.delSuccessNotify()
         this.afterDelMethod()
         this.init()
       }).catch(() => {
         this.delLoading = false
-        this.$refs[id].doClose()
+        const popover = this.$refs['popover-' + id]
+        popover && popover.hide && popover.hide()
       })
     },
     afterDelMethod() {},
@@ -190,7 +192,8 @@ export default {
      */
     delAllMethod() {
       this.delAllLoading = true
-      const data = this.$refs.table.selection
+      const table = this.$refs.table
+      const data = table.getSelectionRows ? table.getSelectionRows() : table.selection
       const ids = []
       for (let i = 0; i < data.length; i++) {
         ids.push(data[i].id)

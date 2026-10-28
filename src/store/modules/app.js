@@ -1,12 +1,16 @@
 import Cookies from 'js-cookie'
 
+const SIZE_OPTIONS = ['large', 'default', 'small']
+
+const normalizeSize = size => SIZE_OPTIONS.includes(size) ? size : 'small'
+
 const state = {
   sidebar: {
     opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
     withoutAnimation: false
   },
   device: 'desktop',
-  size: Cookies.get('size') || 'small'
+  size: normalizeSize(Cookies.get('size'))
 }
 
 const mutations = {
@@ -28,8 +32,8 @@ const mutations = {
     state.device = device
   },
   SET_SIZE: (state, size) => {
-    state.size = size
-    Cookies.set('size', size)
+    state.size = normalizeSize(size)
+    Cookies.set('size', state.size)
   }
 }
 

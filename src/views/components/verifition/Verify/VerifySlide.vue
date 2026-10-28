@@ -57,7 +57,7 @@
     </div>
   </div>
 </template>
-<script type="text/babel">
+<script>
 /**
      * VerifySlide
      * @description 滑块
@@ -70,7 +70,7 @@ import { reqGet, reqCheck } from '@/api/system/verifyCode'
 export default {
   name: 'VerifySlide',
   props: {
-    // eslint-disable-next-line vue/require-default-prop
+
     captchaType: {
       type: String
     },
@@ -187,9 +187,9 @@ export default {
       this.getPictrue()
       this.$nextTick(() => {
         const setSize = this.resetSize(this)	// 重新设置宽度高度
-        // eslint-disable-next-line no-unused-vars
+
         for (const key in setSize) {
-          this.$set(this.setSize, key, setSize[key])
+          this.setSize[key] = setSize[key]
         }
         this.$parent.$emit('ready', this)
       })

@@ -4,27 +4,27 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.blurry" clearable placeholder="模糊搜索" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.blurry" clearable placeholder="模糊搜索" style="width: 200px" class="filter-item" @keyup.enter="crud.toQuery" />
         <date-range-picker v-model="query.createTime" class="date-item" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission">
-        <el-button
-          slot="right"
+        <template #right><el-button
+
           v-permission="['admin','database:add']"
           :disabled="!selectIndex"
           class="filter-item"
-          size="mini"
+          size="small"
           type="warning"
           icon="el-icon-upload"
           @click="execute"
         >执行脚本
-        </el-button>
+        </el-button></template>
       </crudOperation>
     </div>
     <!--表单组件-->
     <eForm ref="execute" :database-info="currentRow" />
-    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="530px">
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :model-value="crud.status.cu > 0" :title="crud.status.title" width="530px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="100px">
         <el-form-item label="连接名称" prop="name">
           <el-input v-model="form.name" style="width: 370px" />
@@ -40,10 +40,10 @@
           <el-input v-model="form.pwd" type="password" style="width: 370px" />
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+      <template #footer><div  class="dialog-footer">
+        <el-button link type="primary" @click="crud.cancelCU">取消</el-button>
         <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
-      </div>
+      </div></template>
     </el-dialog>
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row stripe style="width: 100%" @selection-change="handleCurrentChange">
@@ -53,7 +53,7 @@
       <el-table-column prop="userName" width="200px" label="用户名" />
       <el-table-column prop="createTime" width="200px" label="创建日期" />
       <el-table-column v-if="checkPer(['admin','database:edit','database:del'])" label="操作" width="150px" align="center">
-        <template slot-scope="scope">
+        <template #default="scope">
           <udOperation
             :data="scope.row"
             :permission="permission"

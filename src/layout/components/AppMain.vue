@@ -1,11 +1,13 @@
 <template>
   <section class="app-main">
-    <transition name="fade-transform" mode="out-in">
-      <keep-alive :include="cachedViews">
-        <router-view :key="key" />
-      </keep-alive>
-    </transition>
-    <el-backtop :bottom="50" :right="40"><i class="el-icon-caret-top" /></el-backtop>
+    <router-view v-slot="{ Component, route }">
+      <transition name="fade-transform" mode="out-in">
+        <keep-alive :include="cachedViews">
+          <component :is="Component" :key="route.path" />
+        </keep-alive>
+      </transition>
+    </router-view>
+    <el-backtop :bottom="50" :right="40"><el-icon-caret-top class="el-icon-caret-top" /></el-backtop>
     <div v-if="$store.state.settings.showFooter" id="el-main-footer">
       <span v-html="$store.state.settings.footerTxt" />
       <span> ⋅ </span>
@@ -20,9 +22,6 @@ export default {
   computed: {
     cachedViews() {
       return this.$store.state.tagsView.cachedViews
-    },
-    key() {
-      return this.$route.path
     }
   }
 }

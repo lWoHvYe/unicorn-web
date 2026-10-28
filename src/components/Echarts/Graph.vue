@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
-require('echarts/theme/macarons') // echarts theme
+import 'echarts/theme/macarons' // echarts theme
 import { debounce } from '@/utils'
 
 export default {
@@ -37,7 +37,7 @@ export default {
     }, 100)
     window.addEventListener('resize', this.__resizeHandler)
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -79,18 +79,18 @@ export default {
             coordinateSystem: 'cartesian2d',
             symbolSize: 40,
             label: {
-              normal: {
+
                 show: true
-              }
+
             },
             edgeSymbol: ['circle', 'arrow'],
             edgeSymbolSize: [4, 10],
             data: data,
             links: links,
             lineStyle: {
-              normal: {
+
                 color: '#2f4554'
-              }
+
             }
           }
         ]

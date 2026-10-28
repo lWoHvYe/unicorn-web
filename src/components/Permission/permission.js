@@ -1,7 +1,7 @@
 import store from '@/store'
 
 export default {
-  inserted(el, binding) {
+  mounted(el, binding) {
     const { value } = binding
     const roles = store.getters && store.getters.roles
     if (value && value instanceof Array) {

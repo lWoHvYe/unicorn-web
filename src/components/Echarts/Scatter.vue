@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
-require('echarts/theme/macarons') // echarts theme
+import 'echarts/theme/macarons' // echarts theme
 import { debounce } from '@/utils'
 
 export default {
@@ -37,7 +37,7 @@ export default {
     }, 100)
     window.addEventListener('resize', this.__resizeHandler)
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -92,7 +92,7 @@ export default {
             }
           },
           itemStyle: {
-            normal: {
+
               shadowBlur: 10,
               shadowColor: 'rgba(120, 36, 50, 0.5)',
               shadowOffsetY: 5,
@@ -103,7 +103,7 @@ export default {
                 offset: 1,
                 color: 'rgb(204, 46, 72)'
               }])
-            }
+
           }
         }, {
           name: '2015',
@@ -122,7 +122,7 @@ export default {
             }
           },
           itemStyle: {
-            normal: {
+
               shadowBlur: 10,
               shadowColor: 'rgba(25, 100, 150, 0.5)',
               shadowOffsetY: 5,
@@ -133,7 +133,7 @@ export default {
                 offset: 1,
                 color: 'rgb(25, 183, 207)'
               }])
-            }
+
           }
         }]
       })

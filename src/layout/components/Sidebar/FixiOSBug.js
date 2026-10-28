@@ -14,6 +14,9 @@ export default {
       const $subMenu = this.$refs.subMenu
       if ($subMenu) {
         const handleMouseleave = $subMenu.handleMouseleave
+        if (typeof handleMouseleave !== 'function') {
+          return
+        }
         $subMenu.handleMouseleave = (e) => {
           if (this.device === 'mobile') {
             return

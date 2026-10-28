@@ -22,3 +22,6 @@ selenium-debug.log
 
 package-lock.json
 yarn.lock
+
+# local npm cache used by agents
+.npm-cache/

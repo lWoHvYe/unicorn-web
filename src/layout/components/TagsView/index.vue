@@ -7,13 +7,12 @@
         :key="tag.path"
         :class="isActive(tag)?'active':''"
         :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
-        tag="span"
         class="tags-view-item"
-        @click.middle.native="closeSelectedTag(tag)"
-        @contextmenu.prevent.native="openMenu(tag,$event)"
+        @click.middle="closeSelectedTag(tag)"
+        @contextmenu.prevent="openMenu(tag,$event)"
       >
         {{ tag.title }}
-        <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
+        <el-icon-close v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
       </router-link>
     </scroll-pane>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
@@ -27,7 +26,7 @@
 
 <script>
 import ScrollPane from './ScrollPane'
-import path from 'path'
+import { resolve } from '@/utils/path'
 
 export default {
   components: { ScrollPane },
@@ -73,7 +72,7 @@ export default {
       let tags = []
       routes.forEach(route => {
         if (route.meta && route.meta.affix) {
-          const tagPath = path.resolve(basePath, route.path)
+          const tagPath = resolve(basePath, route.path)
           tags.push({
             fullPath: tagPath,
             path: tagPath,
@@ -107,13 +106,17 @@ export default {
       return false
     },
     moveToCurrentTag() {
-      const tags = this.$refs.tag
+      const tags = this.$refs.tag || []
       this.$nextTick(() => {
         for (const tag of tags) {
-          if (tag.to.path === this.$route.path) {
+          const to = (tag.$props && tag.$props.to) || tag.to
+          if (!to) {
+            continue
+          }
+          if (to.path === this.$route.path) {
             this.$refs.scrollPane.moveToTarget(tag)
             // when query is different then update
-            if (tag.to.fullPath !== this.$route.fullPath) {
+            if (to.fullPath !== this.$route.fullPath) {
               this.$store.dispatch('tagsView/updateVisitedView', this.$route)
             }
             break
@@ -266,16 +269,14 @@ export default {
     .el-icon-close {
       width: 16px;
       height: 16px;
-      vertical-align: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: -2px;
       border-radius: 50%;
       text-align: center;
       transition: all .3s cubic-bezier(.645, .045, .355, 1);
       transform-origin: 100% 50%;
-      &:before {
-        transform: scale(.6);
-        display: inline-block;
-        vertical-align: -3px;
-      }
       &:hover {
         background-color: #b4bccc;
         color: #fff;

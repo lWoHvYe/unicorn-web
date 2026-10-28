@@ -6,7 +6,7 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <search id="header-search" class="right-menu-item" />
+        <header-search id="header-search" class="right-menu-item" />
 
         <el-tooltip content="项目文档" effect="dark" placement="bottom">
           <Doc class="right-menu-item hover-effect" />
@@ -25,25 +25,27 @@
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
           <img :src="user.avatarName ? baseApi + '/avatar/' + user.avatarName : Avatar" class="user-avatar">
-          <i class="el-icon-caret-bottom" />
+          <el-icon-caret-bottom class="el-icon-caret-bottom" />
         </div>
-        <el-dropdown-menu slot="dropdown">
-          <span style="display:block;" @click="show = true">
-            <el-dropdown-item>
-              布局设置
-            </el-dropdown-item>
-          </span>
-          <router-link to="/user/center">
-            <el-dropdown-item>
-              个人中心
-            </el-dropdown-item>
-          </router-link>
-          <span style="display:block;" @click="open">
-            <el-dropdown-item divided>
-              退出登录
-            </el-dropdown-item>
-          </span>
-        </el-dropdown-menu>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <span style="display:block;" @click="show = true">
+              <el-dropdown-item>
+                布局设置
+              </el-dropdown-item>
+            </span>
+            <router-link to="/user/center">
+              <el-dropdown-item>
+                个人中心
+              </el-dropdown-item>
+            </router-link>
+            <span style="display:block;" @click="open">
+              <el-dropdown-item divided>
+                退出登录
+              </el-dropdown-item>
+            </span>
+          </el-dropdown-menu>
+        </template>
       </el-dropdown>
     </div>
   </div>
@@ -56,7 +58,7 @@ import Hamburger from '@/components/Hamburger'
 import Doc from '@/components/Doc'
 import Screenfull from '@/components/Screenfull'
 import SizeSelect from '@/components/SizeSelect'
-import Search from '@/components/HeaderSearch'
+import HeaderSearch from '@/components/HeaderSearch'
 import Avatar from '@/assets/images/avatar.png'
 
 export default {
@@ -65,7 +67,7 @@ export default {
     Hamburger,
     Screenfull,
     SizeSelect,
-    Search,
+    HeaderSearch,
     Doc
   },
   data() {

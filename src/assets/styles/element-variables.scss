@@ -1,31 +1,25 @@
+@use 'sass:color';
+
 /**
-* I think element-ui's default theme color is too light for long-term use.
-* So I modified the default color and you can modify it to your liking.
+* Element Plus 主题色覆盖。
+* 直接覆盖 CSS 变量，无需重新编译 Element Plus 的 theme-chalk。
 **/
 
-/* theme color */
-$--color-primary: #1890ff;
-$--color-success: #13ce66;
-$--color-warning: #FFBA00;
-$--color-danger: #ff4949;
-// $--color-info: #1E1E1E;
+@mixin el-color-vars($name, $color) {
+  --el-color-#{$name}: #{$color};
+  @each $level in 3, 5, 7, 8, 9 {
+    --el-color-#{$name}-light-#{$level}: #{color.mix(#ffffff, $color, $level * 10%)};
+  }
+  --el-color-#{$name}-dark-2: #{color.mix(#000000, $color, 20%)};
+}
 
-$--button-font-weight: 400;
+:root {
+  @include el-color-vars(primary, #1890ff);
+  @include el-color-vars(success, #13ce66);
+  @include el-color-vars(warning, #ffba00);
+  @include el-color-vars(danger, #ff4949);
+  @include el-color-vars(error, #ff4949);
 
-// $--color-text-regular: #1f2d3d;
-
-$--border-color-light: #dfe4ed;
-$--border-color-lighter: #e6ebf5;
-
-$--table-border:1px solid#dfe6ec;
-
-/* icon font path, required */
-$--font-path: '~element-ui/lib/theme-chalk/fonts';
-
-@import "../../../node_modules/element-ui/packages/theme-chalk/src/index";
-
-// the :export directive is the magic sauce for webpack
-// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
-:export {
-  theme: $--color-primary;
+  --el-border-radius-base: 4px;
+  --el-font-size-base: 14px;
 }

@@ -1,11 +1,22 @@
 <template>
-  <div id="app">
+  <el-config-provider :locale="locale" :size="size">
     <router-view />
-  </div>
+  </el-config-provider>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+
 export default {
-  name: 'App'
+  name: 'App',
+  data() {
+    return {
+      locale: zhCn
+    }
+  },
+  computed: {
+    ...mapGetters(['size'])
+  }
 }
 </script>

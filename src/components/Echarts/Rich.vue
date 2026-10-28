@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
-require('echarts/theme/macarons') // echarts theme
+import 'echarts/theme/macarons' // echarts theme
 import { debounce } from '@/utils'
 
 export default {
@@ -37,7 +37,7 @@ export default {
     }, 100)
     window.addEventListener('resize', this.__resizeHandler)
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -67,14 +67,14 @@ export default {
             radius: [0, '30%'],
 
             label: {
-              normal: {
+
                 position: 'inner'
-              }
+
             },
             labelLine: {
-              normal: {
+
                 show: false
-              }
+
             },
             data: [
               { value: 335, name: '直达', selected: true },
@@ -87,7 +87,7 @@ export default {
             type: 'pie',
             radius: ['40%', '55%'],
             label: {
-              normal: {
+
                 formatter: '{a|{a}}{abg|}\n{hr|}\n  {b|{b}：}{c}  {per|{d}%}  ',
                 backgroundColor: '#eee',
                 borderColor: '#aaa',
@@ -128,7 +128,7 @@ export default {
                     borderRadius: 2
                   }
                 }
-              }
+
             },
             data: [
               { value: 335, name: '直达' },

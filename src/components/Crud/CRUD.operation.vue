@@ -6,7 +6,7 @@
       <el-button
         v-if="crud.optShow.add"
         class="filter-item"
-        size="mini"
+        size="small"
         type="primary"
         icon="el-icon-plus"
         @click="crud.toAdd"
@@ -16,7 +16,7 @@
       <el-button
         v-if="crud.optShow.edit"
         class="filter-item"
-        size="mini"
+        size="small"
         type="success"
         icon="el-icon-edit"
         :disabled="crud.selections.length !== 1"
@@ -26,11 +26,10 @@
       </el-button>
       <el-button
         v-if="crud.optShow.del"
-        slot="reference"
         class="filter-item"
         type="danger"
         icon="el-icon-delete"
-        size="mini"
+        size="small"
         :loading="crud.delAllLoading"
         :disabled="crud.selections.length === 0"
         @click="toDelete(crud.selections)"
@@ -42,7 +41,7 @@
         :loading="crud.downloadLoading"
         :disabled="!crud.data.length"
         class="filter-item"
-        size="mini"
+        size="small"
         type="warning"
         icon="el-icon-download"
         @click="crud.doExport"
@@ -52,14 +51,14 @@
     </span>
     <el-button-group class="crud-opts-right">
       <el-button
-        size="mini"
+        size="small"
         plain
         type="info"
         icon="el-icon-search"
         @click="toggleSearch()"
       />
       <el-button
-        size="mini"
+        size="small"
         icon="el-icon-refresh"
         @click="crud.refresh()"
       />
@@ -68,16 +67,11 @@
         width="150"
         trigger="click"
       >
-        <el-button
-          slot="reference"
-          size="mini"
-          icon="el-icon-s-grid"
-        >
-          <i
-            class="fa fa-caret-down"
-            aria-hidden="true"
-          />
-        </el-button>
+        <template #reference>
+          <el-button size="small" icon="el-icon-s-grid">
+            <i class="fa fa-caret-down" aria-hidden="true" />
+          </el-button>
+        </template>
         <el-checkbox
           v-model="allColumnsSelected"
           :indeterminate="allColumnsSelectedIndeterminate"
@@ -100,20 +94,7 @@
 <script>
 import CRUD, { crud } from '@crud/crud'
 
-function sortWithRef(src, ref) {
-  const result = Object.assign([], ref)
-  let cursor = -1
-  src.forEach(e => {
-    const idx = result.indexOf(e)
-    if (idx === -1) {
-      cursor += 1
-      result.splice(cursor, 0, e)
-    } else {
-      cursor = idx
-    }
-  })
-  return result
-}
+const noop = () => {}
 
 export default {
   mixins: [crud()],
@@ -135,56 +116,70 @@ export default {
     return {
       tableColumns: [],
       allColumnsSelected: true,
-      allColumnsSelectedIndeterminate: false,
-      tableUnwatcher: null,
-      // 忽略下次表格列变动
-      ignoreNextTableColumnsChange: false
+      allColumnsSelectedIndeterminate: false
     }
   },
   watch: {
     'crud.props.table'() {
+      // 切换表格时清空缓存的列配置
+      this.columnConfigs = {}
       this.updateTableColumns()
       this.tableColumns.forEach(column => {
-        if (this.hiddenColumns.indexOf(column.property) !== -1) {
+        if (this.hiddenColumns.indexOf(column.property) !== -1 && column.visible) {
           column.visible = false
           this.updateColumnVisible(column)
         }
       })
-    },
-    'crud.props.table.store.states.columns'() {
-      this.updateTableColumns()
     }
   },
   created() {
+    // 不放进 data，避免 Element Plus 的列配置被 Vue 3 响应式代理
+    this.columnConfigs = {}
     this.crud.updateProp('searchToggle', true)
   },
   methods: {
-    updateTableColumns() {
+    getTableStates() {
       const table = this.crud.getTable()
-      if (!table) {
+      return table && table.store ? table.store.states : null
+    },
+    getColumns(states) {
+      const raw = states._columns
+      return (raw && 'value' in raw ? raw.value : raw) || []
+    },
+    columnFilter(column) {
+      return column && column.type === 'default' && column.property && this.ignoreColumns.indexOf(column.property) === -1
+    },
+    updateTableColumns() {
+      const states = this.getTableStates()
+      if (!states) {
         this.tableColumns = []
         return
       }
-      let cols = null
-      const columnFilter = e => e && e.type === 'default' && e.property && this.ignoreColumns.indexOf(e.property) === -1
-      const refCols = table.columns.filter(columnFilter)
-      if (this.ignoreNextTableColumnsChange) {
-        this.ignoreNextTableColumnsChange = false
-        return
-      }
-      this.ignoreNextTableColumnsChange = false
-      const columns = []
-      const fullTableColumns = table.$children.map(e => e.columnConfig).filter(columnFilter)
-      cols = sortWithRef(fullTableColumns, refCols)
-      cols.forEach(config => {
-        const column = {
-          property: config.property,
-          label: config.label,
-          visible: refCols.indexOf(config) !== -1
-        }
-        columns.push(column)
+      const columns = this.getColumns(states)
+      columns.filter(column => this.columnFilter(column)).forEach(column => {
+        this.columnConfigs[column.property] = column
       })
-      this.tableColumns = columns
+      const ordered = Object.keys(this.columnConfigs)
+        .map(property => this.columnConfigs[property])
+        .filter(column => this.columnFilter(column))
+        .sort((a, b) => {
+          const indexA = a.getColumnIndex ? a.getColumnIndex() : 0
+          const indexB = b.getColumnIndex ? b.getColumnIndex() : 0
+          return indexA - indexB
+        })
+      const visibleProperties = columns.filter(column => this.columnFilter(column)).map(column => column.property)
+      this.tableColumns = ordered.map(column => ({
+        property: column.property,
+        label: column.label,
+        visible: visibleProperties.indexOf(column.property) !== -1
+      }))
+      this.refreshCheckState()
+    },
+    refreshCheckState() {
+      const totalCount = this.tableColumns.length
+      const selectedCount = this.tableColumns.filter(column => column.visible).length
+      this.allColumnsSelected = totalCount > 0 && selectedCount === totalCount
+      this.allColumnsSelectedIndeterminate = selectedCount !== 0 && selectedCount !== totalCount
     },
     toDelete(datas) {
       this.$confirm(`确认删除选中的${datas.length}条数据?`, '提示', {
@@ -230,17 +225,23 @@ export default {
       this.updateColumnVisible(item)
     },
     updateColumnVisible(item) {
-      const table = this.crud.props.table
-      const vm = table.$children.find(e => e.prop === item.property)
-      const columnConfig = vm.columnConfig
-      if (item.visible) {
-        // 找出合适的插入点
-        const columnIndex = this.tableColumns.indexOf(item)
-        vm.owner.store.commit('insertColumn', columnConfig, columnIndex + 1, null)
-      } else {
-        vm.owner.store.commit('removeColumn', columnConfig, null)
+      const table = this.crud.getTable()
+      const states = this.getTableStates()
+      if (!table || !states) {
+        return
       }
-      this.ignoreNextTableColumnsChange = true
+      const config = this.columnConfigs[item.property]
+      if (!config) {
+        return
+      }
+      const columns = this.getColumns(states)
+      const visible = columns.some(column => column.property === item.property)
+      if (item.visible && !visible) {
+        table.store.commit('insertColumn', config, null, noop)
+      } else if (!item.visible && visible) {
+        table.store.commit('removeColumn', config, null, noop)
+      }
+      this.updateTableColumns()
     },
     toggleSearch() {
       this.crud.props.searchToggle = !this.crud.props.searchToggle

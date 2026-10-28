@@ -1,14 +1,21 @@
 import axios from 'axios'
 import router from '@/router/routers'
-import { Notification } from 'element-ui'
+import { ElNotification } from 'element-plus'
 import store from '../store'
 import { getToken } from '@/utils/auth'
 import Config from '@/settings'
 import Cookies from 'js-cookie'
 
+const notifyError = (title) => {
+  ElNotification.error({
+    title,
+    duration: 5000
+  })
+}
+
 // 创建axios实例
 const service = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.VUE_APP_BASE_API : '/', // api 的 base_url
+  baseURL: import.meta.env.PROD ? import.meta.env.VUE_APP_BASE_API : '/', // api 的 base_url
   timeout: Config.timeout // 请求超时时间
 })
 
@@ -32,42 +39,41 @@ service.interceptors.response.use(
     return response.data
   },
   error => {
+    const responseData = error.response && error.response.data
     // 兼容blob下载出错json提示
-    if (error.response.data instanceof Blob && error.response.data.type.toLowerCase().indexOf('json') !== -1) {
+    if (responseData instanceof Blob && responseData.type.toLowerCase().indexOf('json') !== -1) {
       const reader = new FileReader()
-      reader.readAsText(error.response.data, 'utf-8')
-      reader.onload = function(e) {
+      reader.readAsText(responseData, 'utf-8')
+      reader.onload = function() {
         const errorMsg = JSON.parse(reader.result).message
-        Notification.error({
-          title: errorMsg,
-          duration: 5000
-        })
+        notifyError(errorMsg)
       }
     } else {
       let code = 0
       let errorMsg = ''
       try {
         // 兼容通用返回与原版返回
-        code = error.response.data.status
+        code = responseData.status
         if (!code) {
-          code = error.response.data.businessCode
+          code = responseData.businessCode
         }
         if (!code) {
           code = error.response.status
         }
-        errorMsg = error.response.data.message
+        errorMsg = responseData.message
         if (!errorMsg) {
-          errorMsg = error.response.data.description
+          errorMsg = responseData.description
         }
         if (!errorMsg) {
-          errorMsg = error.response.data
+          errorMsg = responseData
         }
       } catch (e) {
         if (error.toString().indexOf('Error: timeout') !== -1) {
-          Notification.error({
-            title: '网络请求超时',
-            duration: 5000
-          })
+          notifyError('网络请求超时')
+          return Promise.reject(error)
+        }
+        if (!error.response) {
+          notifyError('网络连接异常')
           return Promise.reject(error)
         }
       }
@@ -83,17 +89,11 @@ service.interceptors.response.use(
           router.push({ path: '/401' })
         } else {
           if (errorMsg !== undefined) {
-            Notification.error({
-              title: errorMsg,
-              duration: 5000
-            })
+            notifyError(String(errorMsg))
           }
         }
       } else {
-        Notification.error({
-          title: '接口请求失败',
-          duration: 5000
-        })
+        notifyError('接口请求失败')
       }
     }
     return Promise.reject(error)

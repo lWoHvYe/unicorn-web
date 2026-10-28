@@ -12,8 +12,6 @@
         <settings />
       </right-panel>
     </div>
-    <!--  防止刷新后主题丢失  -->
-    <Theme v-show="false" ref="theme" />
   </div>
 </template>
 
@@ -22,8 +20,6 @@ import RightPanel from '@/components/RightPanel'
 import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import { mapState } from 'vuex'
-import Theme from '@/components/ThemePicker'
-import Cookies from 'js-cookie'
 export default {
   name: 'Layout',
   components: {
@@ -32,8 +28,7 @@ export default {
     RightPanel,
     Settings,
     Sidebar,
-    TagsView,
-    Theme
+    TagsView
   },
   mixins: [ResizeMixin],
   computed: {
@@ -54,13 +49,6 @@ export default {
     }
   },
   mounted() {
-    if (Cookies.get('theme')) {
-      this.$refs.theme.theme = Cookies.get('theme')
-      this.$store.dispatch('settings/changeSetting', {
-        key: 'theme',
-        value: Cookies.get('theme')
-      })
-    }
     // 初始化后即建立连接
     this.initWebSocket()
   },
@@ -70,7 +58,7 @@ export default {
     },
     // 4 webSocket
     initWebSocket() {
-      const wsUri = process.env.VUE_APP_WS_API + '/webSocket/sysMember'
+      const wsUri = import.meta.env.VUE_APP_WS_API + '/webSocket/sysMember'
       this.websock = new WebSocket(wsUri)
       this.websock.onerror = this.webSocketOnError
       this.websock.onmessage = this.webSocketOnMessage
@@ -107,8 +95,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  @import "~@/assets/styles/mixin.scss";
-  @import "~@/assets/styles/variables.scss";
+  @import "@/assets/styles/mixin.scss";
+  @import "@/assets/styles/variables.scss";
 
   .app-wrapper {
     @include clearfix;

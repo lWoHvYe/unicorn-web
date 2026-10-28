@@ -5,13 +5,13 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <label class="el-form-item-label">ID</label>
-        <el-input v-model="query.resourceId" clearable placeholder="ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.resourceId" clearable placeholder="ID" style="width: 185px;" class="filter-item" @keyup.enter="crud.toQuery" />
         <rrOperation :crud="crud" />
       </div>
       <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
       <crudOperation :permission="permission" />
       <!--表单组件-->
-      <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
+      <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :model-value="crud.status.cu > 0" :title="crud.status.title" width="500px">
         <el-form ref="form" :model="form" :rules="rules" size="small" label-width="80px">
           <el-form-item label="ID">
             <el-input v-model="form.resourceId" style="width: 370px;" />
@@ -27,7 +27,7 @@
               <el-radio
                 v-for="item in dict.status"
                 :key="item.id"
-                :label="item.value"
+                :value="item.value"
               >{{ item.label }}</el-radio>
             </el-radio-group>
           </el-form-item>
@@ -41,10 +41,10 @@
             <el-input v-model="form.reqMethod" style="width: 370px;" />
           </el-form-item>
         </el-form>
-        <div slot="footer" class="dialog-footer">
-          <el-button type="text" @click="crud.cancelCU">取消</el-button>
+        <template #footer><div  class="dialog-footer">
+          <el-button link type="primary" @click="crud.cancelCU">取消</el-button>
           <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
-        </div>
+        </div></template>
       </el-dialog>
       <!--表格渲染-->
       <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
@@ -53,7 +53,7 @@
         <el-table-column prop="name" label="资源名称" />
         <el-table-column prop="pattern" label="URI" />
         <el-table-column label="状态" align="center" prop="status">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.status"
               active-color="#409EFF"
@@ -66,7 +66,7 @@
         <el-table-column prop="remark" label="备注" />
         <el-table-column prop="reqMethod" label="请求方法" />
         <el-table-column label="操作" width="150px" align="center">
-          <template slot-scope="scope">
+          <template #default="scope">
             <udOperation
               :data="scope.row"
               :permission="permission"

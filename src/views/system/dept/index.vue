@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.name" clearable size="small" placeholder="输入部门名称搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.name" clearable size="small" placeholder="输入部门名称搜索" style="width: 200px;" class="filter-item" @keyup.enter="crud.toQuery" />
         <date-range-picker v-model="query.createTime" class="date-item" />
         <el-select v-model="query.enabled" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
           <el-option v-for="item in enabledTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
@@ -14,7 +14,7 @@
       <crudOperation :permission="permission" />
     </div>
     <!--表单组件-->
-    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :model-value="crud.status.cu > 0" :title="crud.status.title" width="500px">
       <el-form ref="form" inline :model="form" :rules="rules" size="small" label-width="80px">
         <el-form-item label="部门名称" prop="name">
           <el-input v-model="form.name" style="width: 370px;" />
@@ -30,27 +30,32 @@
         </el-form-item>
         <el-form-item label="顶级部门">
           <el-radio-group v-model="form.isTop" style="width: 140px">
-            <el-radio label="1">是</el-radio>
-            <el-radio label="0">否</el-radio>
+            <el-radio value="1">是</el-radio>
+            <el-radio value="0">否</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="状态" prop="enabled">
-          <el-radio v-for="item in dict.dept_status" :key="item.id" v-model="form.enabled" :label="item.value">{{ item.label }}</el-radio>
+          <el-radio v-for="item in dict.dept_status" :key="item.id" v-model="form.enabled" :value="item.value">{{ item.label }}</el-radio>
         </el-form-item>
         <el-form-item v-if="form.isTop === '0'" style="margin-bottom: 0;" label="上级部门" prop="pid">
-          <treeselect
+          <el-tree-select
             v-model="form.pid"
-            :load-options="loadDepts"
-            :options="depts"
+            lazy
+            :data="depts"
+            :load="loadDepts"
+            :props="defaultProps"
+            node-key="id"
+            check-strictly
+            :render-after-expand="false"
             style="width: 370px;"
             placeholder="选择上级类目"
           />
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+      <template #footer><div  class="dialog-footer">
+        <el-button link type="primary" @click="crud.cancelCU">取消</el-button>
         <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
-      </div>
+      </div></template>
     </el-dialog>
     <!--表格渲染-->
     <el-table
@@ -64,12 +69,13 @@
       @select="crud.selectChange"
       @select-all="crud.selectAllChange"
       @selection-change="crud.selectionChangeHandler"
+      @expand-change="crud.expandChangeHandler"
     >
       <el-table-column :selectable="checkboxT" type="selection" width="55" />
       <el-table-column label="名称" prop="name" />
       <el-table-column label="排序" prop="deptSort" />
       <el-table-column label="状态" align="center" prop="enabled">
-        <template slot-scope="scope">
+        <template #default="scope">
           <el-switch
             v-model="scope.row.enabled"
             :disabled="scope.row.id === 1"
@@ -81,7 +87,7 @@
       </el-table-column>
       <el-table-column prop="createTime" label="创建日期" />
       <el-table-column label="操作" width="130px" align="center" fixed="right">
-        <template slot-scope="scope">
+        <template #default="scope">
           <udOperation
             :data="scope.row"
             :permission="permission"
@@ -96,9 +102,6 @@
 
 <script>
 import crudDept from '@/api/system/dept'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
@@ -108,7 +111,7 @@ import DateRangePicker from '@/components/DateRangePicker'
 const defaultForm = { id: null, name: null, isTop: '1', subCount: 0, pid: null, deptSort: 999, enabled: 'true' }
 export default {
   name: 'Dept',
-  components: { Treeselect, crudOperation, rrOperation, udOperation, DateRangePicker },
+  components: { crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
     return CRUD({ title: '部门', url: 'api/sys/dept', crudMethod: { ...crudDept }})
   },
@@ -118,6 +121,7 @@ export default {
   data() {
     return {
       depts: [],
+      defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
       rules: {
         name: [
           { required: true, message: '请输入名称', trigger: 'blur' }
@@ -180,6 +184,7 @@ export default {
     getDepts() {
       crudDept.getDepts({ enabled: true }).then(res => {
         this.depts = res.content.map(function(obj) {
+          obj.leaf = !obj.hasChildren
           if (obj.hasChildren) {
             obj.children = null
           }
@@ -188,20 +193,16 @@ export default {
       })
     },
     // 获取弹窗内部门数据
-    loadDepts({ action, parentNode, callback }) {
-      if (action === LOAD_CHILDREN_OPTIONS) {
-        crudDept.getDepts({ enabled: true, pid: parentNode.id }).then(res => {
-          parentNode.children = res.content.map(function(obj) {
-            if (obj.hasChildren) {
-              obj.children = null
-            }
-            return obj
-          })
-          setTimeout(() => {
-            callback()
-          }, 100)
-        })
-      }
+    loadDepts(node, resolve) {
+      crudDept.getDepts({ enabled: true, pid: node.data.id }).then(res => {
+        resolve(res.content.map(function(obj) {
+          obj.leaf = !obj.hasChildren
+          if (obj.hasChildren) {
+            obj.children = null
+          }
+          return obj
+        }))
+      })
     },
     // 提交前的验证
     [CRUD.HOOK.afterValidateCU]() {
@@ -242,13 +243,7 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
- ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
-    height: 30px;
-    line-height: 30px;
-  }
-</style>
-<style rel="stylesheet/scss" lang="scss" scoped>
- ::v-deep .el-input-number .el-input__inner {
+ :deep(.el-input-number) .el-input__inner {
     text-align: left;
   }
 </style>

@@ -36,7 +36,7 @@
               placeholder="输入名称或者邮箱搜索"
               style="width: 200px;"
               class="filter-item"
-              @keyup.enter.native="crud.toQuery"
+              @keyup.enter="crud.toQuery"
             />
             <date-range-picker v-model="query.createTime" class="date-item" />
             <el-select
@@ -60,25 +60,30 @@
           <crudOperation show="" :permission="permission" />
         </div>
         <!--表单渲染-->
-        <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="570px">
+        <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :model-value="crud.status.cu > 0" :title="crud.status.title" width="570px">
           <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="66px">
             <el-form-item label="用户名" prop="username">
-              <el-input v-model="form.username" @keydown.native="keydown($event)" />
+              <el-input v-model="form.username" @keydown="keydown($event)" />
             </el-form-item>
             <el-form-item label="电话" prop="phone">
               <el-input v-model.number="form.phone" />
             </el-form-item>
             <el-form-item label="昵称" prop="nickName">
-              <el-input v-model="form.nickName" @keydown.native="keydown($event)" />
+              <el-input v-model="form.nickName" @keydown="keydown($event)" />
             </el-form-item>
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" />
             </el-form-item>
             <el-form-item label="部门" prop="dept.id">
-              <treeselect
+              <el-tree-select
                 v-model="form.dept.id"
-                :options="depts"
-                :load-options="loadDepts"
+                lazy
+                :data="depts"
+                :load="loadDepts"
+                :props="defaultProps"
+                node-key="id"
+                check-strictly
+                :render-after-expand="false"
                 style="width: 178px"
                 placeholder="选择部门"
               />
@@ -102,8 +107,8 @@
             </el-form-item>
             <el-form-item label="性别">
               <el-radio-group v-model="form.gender" style="width: 178px">
-                <el-radio label="男">男</el-radio>
-                <el-radio label="女">女</el-radio>
+                <el-radio value="男">男</el-radio>
+                <el-radio value="女">女</el-radio>
               </el-radio-group>
             </el-form-item>
             <el-form-item label="状态">
@@ -111,7 +116,7 @@
                 <el-radio
                   v-for="item in dict.status"
                   :key="item.id"
-                  :label="item.value"
+                  :value="item.value"
                 >{{ item.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
@@ -142,10 +147,10 @@
               />
             </el-form-item>
           </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="text" @click="crud.cancelCU">取消</el-button>
+          <template #footer><div  class="dialog-footer">
+            <el-button link type="primary" @click="crud.cancelCU">取消</el-button>
             <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
-          </div>
+          </div></template>
         </el-dialog>
         <!--表格渲染-->
         <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
@@ -156,12 +161,12 @@
           <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="电话" />
           <el-table-column :show-overflow-tooltip="true" width="135" prop="email" label="邮箱" />
           <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
-            <template slot-scope="scope">
+            <template #default="scope">
               <div>{{ scope.row.dept.name }}</div>
             </template>
           </el-table-column>
           <el-table-column label="状态" align="center" prop="enabled">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-switch
                 v-model="scope.row.enabled"
                 :disabled="user.id === scope.row.id"
@@ -178,7 +183,7 @@
             align="center"
             fixed="right"
           >
-            <template slot-scope="scope">
+            <template #default="scope">
               <udOperation
                 :data="scope.row"
                 :permission="permission"
@@ -206,15 +211,13 @@ import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
-import Treeselect, { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 import { mapGetters } from 'vuex'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 let userRoles = []
 let userJobs = []
 const defaultForm = { id: null, username: null, nickName: null, gender: '男', email: null, enabled: 'false', roles: [], jobs: [], dept: { id: null }, phone: null, description: null }
 export default {
   name: 'User',
-  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
+  components: { crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
   cruds() {
     return CRUD({ title: '用户', url: 'api/sys/users', crudMethod: { ...crudUser }})
   },
@@ -392,6 +395,7 @@ export default {
     getDepts() {
       getDepts({ enabled: true }).then(res => {
         this.depts = res.content.map(function(obj) {
+          obj.leaf = !obj.hasChildren
           if (obj.hasChildren) {
             obj.children = null
           }
@@ -417,20 +421,16 @@ export default {
       })
     },
     // 获取弹窗内部门数据
-    loadDepts({ action, parentNode, callback }) {
-      if (action === LOAD_CHILDREN_OPTIONS) {
-        getDepts({ enabled: true, pid: parentNode.id }).then(res => {
-          parentNode.children = res.content.map(function(obj) {
-            if (obj.hasChildren) {
-              obj.children = null
-            }
-            return obj
-          })
-          setTimeout(() => {
-            callback()
-          }, 200)
-        })
-      }
+    loadDepts(node, resolve) {
+      getDepts({ enabled: true, pid: node.data.id }).then(res => {
+        resolve(res.content.map(function(obj) {
+          obj.leaf = !obj.hasChildren
+          if (obj.hasChildren) {
+            obj.children = null
+          }
+          return obj
+        }))
+      })
     },
     // 切换部门
     handleNodeClick(data) {
@@ -481,10 +481,3 @@ export default {
   }
 }
 </script>
-
-<style rel="stylesheet/scss" lang="scss" scoped>
-  ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
-    height: 30px;
-    line-height: 30px;
-  }
-</style>

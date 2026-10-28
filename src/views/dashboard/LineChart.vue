@@ -3,8 +3,8 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
+import * as echarts from 'echarts'
+import 'echarts/theme/macarons' // echarts theme
 import resize from './mixins/resize'
 
 export default {
@@ -49,7 +49,7 @@ export default {
       this.initChart()
     })
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -94,13 +94,13 @@ export default {
         },
         series: [{
           name: 'expected', itemStyle: {
-            normal: {
+
               color: '#FF005A',
               lineStyle: {
                 color: '#FF005A',
                 width: 2
               }
-            }
+
           },
           smooth: true,
           type: 'line',
@@ -113,7 +113,7 @@ export default {
           smooth: true,
           type: 'line',
           itemStyle: {
-            normal: {
+
               color: '#3888fa',
               lineStyle: {
                 color: '#3888fa',
@@ -122,7 +122,7 @@ export default {
               areaStyle: {
                 color: '#f3f8ff'
               }
-            }
+
           },
           data: actualData,
           animationDuration: 2800,

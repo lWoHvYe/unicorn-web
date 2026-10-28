@@ -1,6 +1,6 @@
 # ELADMIN-WEB
 
-ELADMIN 前端源码
+EL-ADMIN 前端源码，当前技术栈：**Vue 3 + Vite + Element Plus**。
 
 #### 项目源码
 
@@ -8,49 +8,98 @@ ELADMIN 前端源码
 |---  |--- | --- |
 |  原项目-github   |  https://github.com/elunez/eladmin   |  https://github.com/elunez/eladmin-web   |
 |  原项目-码云   |  https://gitee.com/elunez/eladmin   |  https://gitee.com/elunez/eladmin-web   |
-|  github   |   https://github.com/lWoHvYe/eladmin |    https://github.com/lWoHvYe/eladmin-web |
+|  github   |   https://github.com/lWoHvYe/eladmin |    https://github.com/lWoHvYe/unicorn-web |
 
 #### 开发文档
-[https://el-admin.vip](https://el-admin.vip)
 
-#### 前端模板
+- EL-ADMIN 文档：[https://el-admin.vip](https://el-admin.vip)
+- 本仓库开发约定与架构说明：[AGENTS.md](./AGENTS.md)
 
-初始模板基于： [https://github.com/PanJiaChen/vue-element-admin](https://github.com/PanJiaChen/vue-element-admin)
+#### 技术栈
 
-模板文档： [https://panjiachen.github.io/vue-element-admin-site/zh/guide/](https://panjiachen.github.io/vue-element-admin-site/zh/guide/)
+| 分类 | 选型 |
+| --- | --- |
+| 框架 | Vue 3.5 |
+| 构建 | Vite 8 |
+| UI | Element Plus 2.14 |
+| 路由 | Vue Router 4（hash 模式） |
+| 状态 | Vuex 4 |
+| 图表 | ECharts 5 + vue-echarts 7 |
+| 编辑器 | md-editor-v3、wangEditor 5、CodeMirror 5 |
+| Lint | ESLint 10（flat config） |
+
+#### 环境要求
+
+- Node.js **^20.19 或 >=22.12**（推荐 Node 24，已在 Node 24.22 验证）
+- npm >= 10
 
 #### Build Setup
-``` bash
+
+```bash
 # 安装依赖
 npm install
 
-# 启动服务 localhost:8013
+# 启动服务 http://localhost:8013（不自动打开浏览器）
 npm run dev
 
-# 构建生产环境
+# 生产构建（输出 dist/）
 npm run build:prod
+
+# 预览生产构建
+npm run preview
+
+# 代码检查
+npm run lint
 ```
+
+#### 环境变量
+
+配置文件：`.env.development`、`.env.production`、`.env.staging`。
+
+```bash
+# 后端接口地址（开发环境由 Vite dev server 代理）
+VUE_APP_BASE_API='https://localhost:8081'
+# WebSocket 地址
+VUE_APP_WS_API='wss://localhost:8081'
+```
+
+说明：
+
+- 开发代理路径：`/api`、`/auth`、`/captcha` → `VUE_APP_BASE_API`，并允许自签名证书。
+- 生产默认接口前缀 `/server-api`，请根据 Nginx 反向代理配置调整。
+- 路由使用 hash 模式，生产 `base` 为 `./`，可部署到任意静态目录。
+
+#### 目录与架构
+
+详见 [AGENTS.md](./AGENTS.md)，其中包含：
+
+- 动态菜单/权限路由加载流程
+- axios 请求层与错误处理
+- `v-permission` / `checkPer`
+- 数据字典 mixin
+- 自研 CRUD 框架（`@crud`）
+- 布局、TagsView、keep-alive 缓存约定
+- SVG 图标与 Element Plus 图标兼容方案
+- Element Plus 主题覆盖与主题切换
+- Vue 3 迁移过程中的注意事项与已知问题
+
+#### 与旧版（Vue 2）的差异
+
+- 构建工具由 Vue CLI 4 / webpack 迁移为 Vite 8，入口改为根目录 `index.html`。
+- UI 由 Element UI 2 迁移为 Element Plus 2；`slot-scope`、`.sync`、`.native` 等 Vue 2 语法已清理。
+- `vue-router@3` → `vue-router@4`（`addRoutes` → `addRoute`），`vuex@3` → `vuex@4`。
+- `mavon-editor` → `md-editor-v3`；wangEditor 4 → wangEditor 5；`vue-count-to`/`vue-image-crop-upload`/`vue-highlightjs` 由本地组件或 `highlight.js` 替代。
+- `@riophae/vue-treeselect`（及不兼容 Vue 3 的 `vue3-treeselect`）替换为 Element Plus `el-tree-select`。
+- ECharts 4 → 5，图表 option 中的 `normal` 嵌套已扁平化。
+- 已移除 `node-sass`、`babel`、`jest`、`plop` 等 Vue 2 时代工具链。
 
 #### 常见问题
 
-1、linux 系统在安装依赖的时候会出现 node-sass 无法安装的问题
-
-解决方案：
-```
-1. 单独安装：npm install --unsafe-perm node-sass 
-2. 直接使用：npm install --unsafe-perm
-```
-
-2、加速node-sass安装
-
-https://www.ydyno.com/archives/1219.html
-
-3、其他
-```shell
-node -v -> node@16.13.0
-# 若更高的版本，可简单添加环境变量 NODE_OPTIONS=--openssl-legacy-provider 在node@22.20.0可以正常运行
-```
-https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported
+1. **Node 版本**：Vite 8 要求 Node 20.19+；低版本 Node 请升级，不再需要 `NODE_OPTIONS=--openssl-legacy-provider`。
+2. **本地后端为 HTTPS 自签名证书**：Vite 代理已设置 `secure: false`；如接口仍报证书错误，请检查后端证书或改用 HTTP。
+3. **首页 WebSocket 报错**：Layout 启动时会连接 `VUE_APP_WS_API`，后端未启动时出现连接失败提示属正常现象。
+4. **构建 chunk 过大**：Element Plus、ECharts、编辑器均为大依赖，构建时会出现 chunk 体积警告；页面已按路由懒加载，可在 `vite.config.js` 的 `manualChunks` 中继续优化。
+5. **没有测试用例**：仓库暂未包含单元/E2E 测试，提交前以 `npm run lint` + `npm run build` 为准。
 
 #### 特别鸣谢
 

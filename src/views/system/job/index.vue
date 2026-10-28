@@ -10,12 +10,12 @@
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="名称" />
       <el-table-column prop="jobSort" label="排序">
-        <template slot-scope="scope">
+        <template #default="scope">
           {{ scope.row.jobSort }}
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" align="center">
-        <template slot-scope="scope">
+        <template #default="scope">
           <el-switch
             v-model="scope.row.enabled"
             active-color="#409EFF"
@@ -32,7 +32,7 @@
         align="center"
         fixed="right"
       >
-        <template slot-scope="scope">
+        <template #default="scope">
           <udOperation
             :data="scope.row"
             :permission="permission"
@@ -86,9 +86,9 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        // eslint-disable-next-line no-undef
+
         crudJob.edit(data).then(() => {
-          // eslint-disable-next-line no-undef
+
           this.crud.notify(this.dict.label.job_status[val] + '成功', 'success')
         }).catch(err => {
           data.enabled = !data.enabled
@@ -103,7 +103,7 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
- ::v-deep .el-input-number .el-input__inner {
+ :deep(.el-input-number) .el-input__inner {
     text-align: left;
   }
 </style>

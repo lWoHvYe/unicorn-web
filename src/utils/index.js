@@ -247,7 +247,7 @@ export function getTime(type) {
  * @return {*}
  */
 export function debounce(func, wait, immediate) {
-  let timeout, args, context, timestamp, result
+  let timeout, pendingArgs, context, timestamp, result
 
   const later = function() {
     // 据上一次触发时间间隔
@@ -260,21 +260,22 @@ export function debounce(func, wait, immediate) {
       timeout = null
       // 如果设定为immediate===true，因为开始边界已经调用过了此处无需调用
       if (!immediate) {
-        result = func.apply(context, args)
-        if (!timeout) context = args = null
+        result = func.apply(context, pendingArgs)
+        if (!timeout) context = null
       }
     }
   }
 
   return function(...args) {
     context = this
+    pendingArgs = args
     timestamp = +new Date()
     const callNow = immediate && !timeout
     // 如果延时不存在，重新设定延时
     if (!timeout) timeout = setTimeout(later, wait)
     if (callNow) {
       result = func.apply(context, args)
-      context = args = null
+      context = null
     }
 
     return result

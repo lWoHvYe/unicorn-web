@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
-require('echarts/theme/macarons') // echarts theme
+import 'echarts/theme/macarons' // echarts theme
 import { debounce } from '@/utils'
 
 export default {
@@ -37,7 +37,7 @@ export default {
     }, 100)
     window.addEventListener('resize', this.__resizeHandler)
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -63,18 +63,18 @@ export default {
             symbolSize: 50,
             roam: true,
             label: {
-              normal: {
+
                 show: true
-              }
+
             },
             edgeSymbol: ['circle', 'arrow'],
             edgeSymbolSize: [4, 10],
             edgeLabel: {
-              normal: {
+
                 textStyle: {
                   fontSize: 20
                 }
-              }
+
             },
             data: [{
               name: '节点1',
@@ -99,26 +99,26 @@ export default {
               target: 1,
               symbolSize: [5, 20],
               label: {
-                normal: {
+
                   show: true
-                }
+
               },
               lineStyle: {
-                normal: {
+
                   width: 5,
                   curveness: 0.2
-                }
+
               }
             }, {
               source: '节点2',
               target: '节点1',
               label: {
-                normal: {
+
                   show: true
-                }
+
               },
               lineStyle: {
-                normal: { curveness: 0.2 }
+                 curveness: 0.2
               }
             }, {
               source: '节点1',
@@ -134,11 +134,11 @@ export default {
               target: '节点4'
             }],
             lineStyle: {
-              normal: {
+
                 opacity: 0.9,
                 width: 2,
                 curveness: 0
-              }
+
             }
           }
         ]

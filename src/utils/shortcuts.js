@@ -1,76 +1,37 @@
 import Date from './datetime.js'
 
+const endOfDay = date => {
+  const result = new Date(date.getTime())
+  result.setHours(23, 59, 59, 999)
+  return result
+}
+
+const startOfDay = date => {
+  const result = new Date(date.getTime())
+  result.setHours(0, 0, 0, 0)
+  return result
+}
+
+// Element Plus 的 shortcuts 改为 { text, value: () => [start, end] } 结构，
+// 不再通过 picker.$emit('pick', ...) 触发。
 export const calendarBaseShortcuts = [{
   text: '今天',
-  onClick(picker) {
-    const startTime = new Date(new Date().setHours(0, 0, 0))
-    const endTime = new Date(new Date().setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date()), endOfDay(new Date())]
 }, {
   text: '昨天',
-  onClick(picker) {
-    const startTime = new Date(new Date().daysAgo(1).setHours(0, 0, 0))
-    const endTime = new Date(new Date().daysAgo(1).setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date().daysAgo(1)), endOfDay(new Date().daysAgo(1))]
 }, {
   text: '本周',
-  onClick(picker) {
-    const startTime = new Date(new Date().daysAgo(new Date().getDay() - 1).setHours(0, 0, 0))
-    const endTime = new Date(new Date().setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date().daysAgo(new Date().getDay() - 1)), endOfDay(new Date())]
 }, {
   text: '这个月',
-  onClick(picker) {
-    const startTime = new Date(new Date().monthBegin().setHours(0, 0, 0))
-    const endTime = new Date(new Date().setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date().monthBegin()), endOfDay(new Date())]
 }, {
   text: '当前季度',
-  onClick(picker) {
-    const startTime = new Date(new Date().quarterBegin().setHours(0, 0, 0))
-    const endTime = new Date(new Date().setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date().quarterBegin()), endOfDay(new Date())]
 }, {
   text: '最近一个月',
-  onClick(picker) {
-    const startTime = new Date(new Date().daysAgo(30).setHours(0, 0, 0))
-    const endTime = new Date(new Date().setHours(23, 59, 59))
-    picker.$emit('pick', [startTime, endTime])
-  }
+  value: () => [startOfDay(new Date().daysAgo(30)), endOfDay(new Date())]
 }]
 
-export const calendarMoveShortcuts = [{
-  text: '‹ 往前一天 ',
-  onClick(picker) {
-    let startTime = new Date(new Date().setHours(0, 0, 0))
-    let endTime = new Date(new Date().setHours(23, 59, 59))
-    if (!picker.value) {
-      picker.value = [startTime, endTime]
-    }
-    startTime = picker.value[0].daysAgo(1)
-    endTime = picker.value[1].daysAgo(1)
-    picker.$emit('pick', [startTime, endTime])
-  }
-}, {
-  text: ' 往后一天 ›',
-  onClick(picker) {
-    let startTime = new Date(new Date().setHours(0, 0, 0))
-    let endTime = new Date(new Date().setHours(23, 59, 59))
-    if (!picker.value) {
-      picker.value = [startTime, endTime]
-    }
-    startTime = picker.value[0].daysAgo(-1)
-    endTime = picker.value[1].daysAgo(-1)
-    picker.$emit('pick', [startTime, endTime])
-  }
-}]
-
-export const calendarShortcuts = [
-  ...calendarBaseShortcuts,
-  ...calendarMoveShortcuts
-]
+export const calendarShortcuts = calendarBaseShortcuts

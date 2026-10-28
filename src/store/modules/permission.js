@@ -2,6 +2,8 @@ import { constantRouterMap } from '@/router/routers'
 import Layout from '@/layout/index'
 import ParentView from '@/components/ParentView'
 
+const viewModules = import.meta.glob('../../views/**/*.vue')
+
 const permission = {
   state: {
     routers: constantRouterMap,
@@ -77,7 +79,10 @@ function filterChildren(childrenMap, lastRouter = false) {
 }
 
 export const loadView = (view) => {
-  return (resolve) => require([`@/views/${view}`], resolve)
+  const normalized = String(view).replace(/^\/+/, '').replace(/\.vue$/, '')
+  return viewModules[`../../views/${normalized}.vue`] ||
+    viewModules[`../../views/${normalized}/index.vue`] ||
+    (() => import('../../views/features/404.vue'))
 }
 
 export default permission

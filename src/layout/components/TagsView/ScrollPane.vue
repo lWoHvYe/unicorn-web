@@ -1,5 +1,5 @@
 <template>
-  <el-scrollbar ref="scrollContainer" :vertical="false" class="scroll-container" @wheel.native.prevent="handleScroll">
+  <el-scrollbar ref="scrollContainer" :vertical="false" class="scroll-container" @wheel.prevent="handleScroll">
     <slot />
   </el-scrollbar>
 </template>
@@ -16,20 +16,30 @@ export default {
   },
   computed: {
     scrollWrapper() {
-      return this.$refs.scrollContainer.$refs.wrap
+      const container = this.$refs.scrollContainer
+      return container && container.$el
+        ? container.$el.querySelector('.el-scrollbar__wrap')
+        : null
     }
   },
   methods: {
     handleScroll(e) {
       const eventDelta = e.wheelDelta || -e.deltaY * 40
       const $scrollWrapper = this.scrollWrapper
+      if (!$scrollWrapper) {
+        return
+      }
       $scrollWrapper.scrollLeft = $scrollWrapper.scrollLeft + eventDelta / 4
     },
     moveToTarget(currentTag) {
-      const $container = this.$refs.scrollContainer.$el
-      const $containerWidth = $container.offsetWidth
+      const container = this.$refs.scrollContainer
       const $scrollWrapper = this.scrollWrapper
-      const tagList = this.$parent.$refs.tag
+      if (!container || !$scrollWrapper) {
+        return
+      }
+      const $container = container.$el
+      const $containerWidth = $container.offsetWidth
+      const tagList = (this.$parent && this.$parent.$refs.tag) || []
 
       let firstTag = null
       let lastTag = null
@@ -49,6 +59,9 @@ export default {
         const currentIndex = tagList.findIndex(item => item === currentTag)
         const prevTag = tagList[currentIndex - 1]
         const nextTag = tagList[currentIndex + 1]
+        if (!prevTag || !nextTag) {
+          return
+        }
 
         // the tag's offsetLeft after of nextTag
         const afterNextTagOffsetLeft = nextTag.$el.offsetLeft + nextTag.$el.offsetWidth + tagAndTagSpacing
@@ -73,13 +86,11 @@ export default {
   position: relative;
   overflow: hidden;
   width: 100%;
- ::v-deep {
-    .el-scrollbar__bar {
-      bottom: 0px;
-    }
-    .el-scrollbar__wrap {
-      height: 49px;
-    }
+  :deep(.el-scrollbar__bar) {
+    bottom: 0px;
+  }
+  :deep(.el-scrollbar__wrap) {
+    height: 49px;
   }
 }
 </style>

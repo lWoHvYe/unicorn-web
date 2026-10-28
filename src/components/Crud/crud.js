@@ -1,6 +1,6 @@
 import { initData, download } from '@/api/data'
 import { parseTime, downloadFile } from '@/utils/index'
-import Vue from 'vue'
+import { markRaw, reactive } from 'vue'
 
 /**
  * CRUD配置
@@ -134,8 +134,15 @@ function CRUD(options) {
         initData(crud.url, crud.getQueryParams()).then(data => {
           const table = crud.getTable()
           if (table && table.lazy) { // 懒加载子节点数据，清掉已加载的数据
-            table.store.states.treeData = {}
-            table.store.states.lazyTreeNodeMap = {}
+            const states = table.store && table.store.states
+            if (states) {
+              if (states.treeData) {
+                states.treeData.value = {}
+              }
+              if (states.lazyTreeNodeMap) {
+                states.lazyTreeNodeMap.value = {}
+              }
+            }
           }
           crud.page.total = data.totalElements
           crud.data = data.content
@@ -399,13 +406,13 @@ function CRUD(options) {
     resetForm(data) {
       const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
       const crudFrom = crud.form
-      // eslint-disable-next-line no-unused-vars
+
       for (const key in form) {
-        // eslint-disable-next-line no-prototype-builtins
+
         if (crudFrom.hasOwnProperty(key)) {
           crudFrom[key] = form[key]
         } else {
-          Vue.set(crudFrom, key, form[key])
+          crudFrom[key] = form[key]
         }
       }
       // add by ghl 2020-10-04  页面重复添加信息时，下拉框的校验会存在，需要找工取消
@@ -501,7 +508,7 @@ function CRUD(options) {
       })
     },
     updateProp(name, value) {
-      Vue.set(crud.props, name, value)
+      crud.props[name] = value
     },
     getDataId(data) {
       return data[this.idField]
@@ -511,38 +518,39 @@ function CRUD(options) {
     },
     attchTable() {
       const table = this.getTable()
-      this.updateProp('table', table)
-      const that = this
-      table.$on('expand-change', (row, expanded) => {
-        if (!expanded) {
-          return
-        }
-        const lazyTreeNodeMap = table.store.states.lazyTreeNodeMap
-        row.children = lazyTreeNodeMap[crud.getDataId(row)]
-        if (row.children) {
-          row.children.forEach(ele => {
-            const id = crud.getDataId(ele)
-            if (that.dataStatus[id] === undefined) {
-              that.dataStatus[id] = {
-                delete: 0,
-                edit: 0
-              }
+      // 组件实例不需要响应式，避免 Vue 3 深度代理破坏 Element Plus 内部状态
+      this.updateProp('table', markRaw(table))
+    },
+    expandChangeHandler(row, expanded) {
+      if (!expanded) {
+        return
+      }
+      const table = this.getTable()
+      const states = table && table.store && table.store.states
+      const lazyTreeNodeMap = states && states.lazyTreeNodeMap ? states.lazyTreeNodeMap.value : {}
+      row.children = lazyTreeNodeMap[crud.getDataId(row)]
+      if (row.children) {
+        row.children.forEach(ele => {
+          const id = crud.getDataId(ele)
+          if (this.dataStatus[id] === undefined) {
+            this.dataStatus[id] = {
+              delete: 0,
+              edit: 0
             }
-          })
-        }
-      })
+          }
+        })
+      }
     }
   }
-  const crud = Object.assign({}, data)
-  // 可观测化
-  Vue.observable(crud)
+  const crud = reactive(Object.assign({}, data))
   // 附加方法
   Object.assign(crud, methods)
   // 记录初始默认的查询参数，后续重置查询时使用
   Object.assign(crud, {
     defaultQuery: JSON.parse(JSON.stringify(data.query)),
     // 预留4位存储：组件 主页、头部、分页、表单，调试查看也方便找
-    vms: Array(4),
+    // markRaw 避免组件实例被响应式代理（Vue 3 会深度代理嵌套对象）
+    vms: markRaw(Array(4)),
     /**
      * 注册组件实例
      * @param {String} type 类型
@@ -585,8 +593,7 @@ function CRUD(options) {
       }
     }
   })
-  // 冻结处理，需要扩展数据的话，使用crud.updateProp(name, value)，以crud.props.name形式访问，这个是响应式的，可以做数据绑定
-  Object.freeze(crud)
+  // 需要扩展数据的话，使用 crud.updateProp(name, value)，以 crud.props.name 形式访问
   return crud
 }
 
@@ -619,9 +626,9 @@ function mergeOptions(src, opts) {
   const optsRet = {
     ...src
   }
-  // eslint-disable-next-line no-unused-vars
+
   for (const key in src) {
-    // eslint-disable-next-line no-prototype-builtins
+
     if (opts.hasOwnProperty(key)) {
       optsRet[key] = opts[key]
     }
@@ -679,15 +686,15 @@ function presenter(crud) {
       parseTime
     },
     created() {
-      // eslint-disable-next-line no-unused-vars
+
       for (const k in this.$crud) {
         if (this.$crud[k].queryOnPresenterCreated) {
           this.$crud[k].toQuery()
         }
       }
     },
-    destroyed() {
-      // eslint-disable-next-line no-unused-vars
+    unmounted() {
+
       for (const k in this.$crud) {
         this.$crud[k].unregisterVM('presenter', this)
       }
@@ -716,7 +723,7 @@ function header() {
       this.crud = lookupCrud(this)
       this.crud.registerVM('header', this, 1)
     },
-    destroyed() {
+    unmounted() {
       this.crud.unregisterVM('header', this)
     }
   }
@@ -737,7 +744,7 @@ function pagination() {
       this.crud = lookupCrud(this)
       this.crud.registerVM('pagination', this, 2)
     },
-    destroyed() {
+    unmounted() {
       this.crud.unregisterVM('pagination', this)
     }
   }
@@ -762,7 +769,7 @@ function form(defaultForm) {
       this.crud.defaultForm = defaultForm
       this.crud.resetForm()
     },
-    destroyed() {
+    unmounted() {
       this.crud.unregisterVM('form', this)
     }
   }
@@ -786,7 +793,7 @@ function crud(options = {}) {
       this.crud = lookupCrud(this)
       this.crud.registerVM(options.type, this)
     },
-    destroyed() {
+    unmounted() {
       this.crud.unregisterVM(options.type, this)
     }
   }

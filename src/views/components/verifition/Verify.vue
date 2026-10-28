@@ -9,7 +9,7 @@
       </div>
       <div class="verifybox-bottom" :style="{padding:mode==='pop'?'15px':'0'}">
         <!-- 验证码容器 -->
-        <components
+        <component
           :is="componentType"
           v-if="componentType"
           ref="instance"
@@ -29,12 +29,13 @@
     </div>
   </div>
 </template>
-<script type="text/babel">
+<script>
 /**
  * Verify 验证码组件
  * @description 分发验证码使用
  * */
 import VerifySlide from './Verify/VerifySlide'
+import defaultImg from '@/assets/images/default.jpg'
 import VerifyPoints from './Verify/VerifyPoints'
 
 export default {
@@ -103,7 +104,7 @@ export default {
       // 所用组件类型
       componentType: undefined,
       // 默认图片
-      defaultImg: require('@/assets/images/default.jpg')
+      defaultImg
     }
   },
   computed: {

@@ -1,7 +1,7 @@
 import Dict from './Dict'
 
-const install = function(Vue) {
-  Vue.mixin({
+const install = function(app) {
+  app.mixin({
     data() {
       if (this.$options.dicts instanceof Array) {
         const dict = {

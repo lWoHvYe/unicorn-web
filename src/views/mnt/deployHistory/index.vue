@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.blurry" clearable placeholder="输入搜索内容" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.blurry" clearable placeholder="输入搜索内容" style="width: 200px" class="filter-item" @keyup.enter="crud.toQuery" />
         <date-range-picker v-model="query.deployDate" class="date-item" />
         <rrOperation />
       </div>
@@ -18,19 +18,19 @@
       <el-table-column prop="deployUser" label="部署人员" />
       <el-table-column prop="deployDate" label="部署时间" />
       <el-table-column v-if="checkPer(['admin','deployHistory:del'])" label="操作" width="100px" align="center">
-        <template slot-scope="scope">
+        <template #default="scope">
           <el-popover
-            :ref="scope.row.id"
+            :ref="'popover-' + scope.row.id"
             v-permission="['admin','deployHistory:del']"
             placement="top"
             width="180"
           >
             <p>确定删除本条数据吗？</p>
             <div style="text-align: right; margin: 0">
-              <el-button size="mini" type="text" @click="$refs[scope.row.id].doClose()">取消</el-button>
-              <el-button :loading="delLoading" type="primary" size="mini" @click="delMethod(scope.row.id)">确定</el-button>
+              <el-button size="small" link type="primary" @click="$refs['popover-' + scope.row.id].hide()">取消</el-button>
+              <el-button :loading="delLoading" type="primary" size="small" @click="delMethod(scope.row.id)">确定</el-button>
             </div>
-            <el-button slot="reference" type="danger" icon="el-icon-delete" size="mini" />
+            <template #reference><el-button  type="danger" icon="el-icon-delete" size="small" /></template>
           </el-popover>
         </template>
       </el-table-column>
@@ -76,13 +76,19 @@ export default {
       this.delLoading = true
       del([id]).then(() => {
         this.delLoading = false
-        this.$refs[id].doClose()
+        const popover = this.$refs['popover-' + id]
+        if (popover) {
+          popover.hide()
+        }
         this.crud.dleChangePage(1)
         this.crud.delSuccessNotify()
         this.crud.toQuery()
       }).catch(() => {
         this.delLoading = false
-        this.$refs[id].doClose()
+        const popover = this.$refs['popover-' + id]
+        if (popover) {
+          popover.hide()
+        }
       })
     }
   }

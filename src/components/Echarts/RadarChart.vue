@@ -3,8 +3,8 @@
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
+import * as echarts from 'echarts'
+import 'echarts/theme/macarons' // echarts theme
 import { debounce } from '@/utils'
 
 const animationDuration = 3000
@@ -38,7 +38,7 @@ export default {
     }, 100)
     window.addEventListener('resize', this.__resizeHandler)
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (!this.chart) {
       return
     }
@@ -89,13 +89,13 @@ export default {
           type: 'radar',
           symbolSize: 0,
           areaStyle: {
-            normal: {
+
               shadowBlur: 13,
               shadowColor: 'rgba(0,0,0,.2)',
               shadowOffsetX: 0,
               shadowOffsetY: 10,
               opacity: 1
-            }
+
           },
           data: [
             {

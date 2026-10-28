@@ -57,10 +57,10 @@ export const loadMenus = (next, to) => {
     const rdata = JSON.parse(JSON.stringify(res.content))
     const sidebarRoutes = filterAsyncRouter(sdata)
     const rewriteRoutes = filterAsyncRouter(rdata, false, true)
-    rewriteRoutes.push({ path: '*', redirect: '/404', hidden: true })
 
     store.dispatch('GenerateRoutes', rewriteRoutes).then(() => { // 存储路由
-      router.addRoutes(rewriteRoutes) // 动态添加可访问路由表
+      // Vue Router 4 移除了 addRoutes，改为逐条 addRoute
+      rewriteRoutes.forEach(route => router.addRoute(route))
       next({ ...to, replace: true })
     })
     store.dispatch('SetSidebarRouters', sidebarRoutes)
