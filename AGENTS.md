@@ -187,6 +187,7 @@ Vue 3 迁移后的关键点：
 - `TagsView` 维护 `visitedViews`，支持刷新（跳 `/redirect/...`）、关闭、关闭其他/全部；固定标签由 `meta.affix` 决定。RouterLink 不再使用 `tag="span"`，直接渲染 `<a class="tags-view-item">`。
 - 侧边栏宽度、主题色等来自 `settings.js` 与 `src/assets/styles/variables.scss`；JS 侧读取 `src/assets/styles/variables.js`（SCSS 的 `:export` 在 Vite 下不可用）。
 - `Settings` 面板可切换主题色、TagsView、固定 Header、Logo、手风琴菜单；主题色写入 Cookie。
+- SCSS 已全部迁移到 `@use`（`index.scss` 聚合，`sidebar.scss` / `btn.scss` 各自 `@use 'variables' as *`），新增样式不要再使用 `@import`。
 - 主题实现：`src/utils/theme.js` 的 `applyTheme(color)` 直接设置 `--el-color-primary*` CSS 变量；`ThemePicker` 只负责选色/持久化。
 - `Screenfull`、`SizeSelect`、`HeaderSearch`、`RightPanel` 为通用布局组件。
 
@@ -237,18 +238,19 @@ Vue 3 迁移后的关键点：
   - 具名插槽用 `<template #name>`，`slot-scope` 改为 `#default="scope"`。
 - 时间格式化统一用 `utils/index.js` 的 `parseTime`；导出用 `downloadFile`。
 - 新建组件时不要再引入 `path`、`process.env`、`require.context` 等 Node/webpack 专属能力；路径处理用 `@/utils/path`。
+- SCSS 使用 `@use`；需要变量时在文件顶部写 `@use 'variables' as *;`，不要再用 `@import`。
 
 ## 8. 已知问题与坑点
 
 1. **ECharts 5 视觉细节**：图表 option 从 ECharts 4 迁移，已扁平化 `normal`；部分 `textStyle` 嵌套/刻度配置可能仍需按实际页面做视觉 QA。控制台可能出现 “ticks may be not readable when set min/max” 警告，可按需调整 `min`/`max`/`splitNumber` 或忽略。
-2. **WebGL**：`echarts-gl` / `components/Echarts/Line3D.vue` 需要 WebGL；无 GPU/无头浏览器会报 WebGL 错误，属环境限制。
-3. **Live2D 与 WebSocket**：首页 Live2D 从 jsDelivr 动态加载脚本；Layout 启动时连接 `VUE_APP_WS_API`。后端未启动时会出现连接错误通知，属预期。
+2. **WebGL**：`echarts-gl` / `components/Echarts/Line3D.vue` 以及 Live2D 看板娘都需要 WebGL；无 GPU/无头浏览器会报 WebGL 错误，属环境限制。
+3. **Live2D 与 WebSocket**：`components/Live2D/Live2DWidget.vue` 会依次尝试 fastly / unpkg / jsDelivr 加载 `live2d-widgets@0` 的 `waifu.css`、`live2d.min.js`、`waifu-tips.js`，模型来自 `fghrsh/live2d_api`；可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖资源地址。CDN 不可达或浏览器无 WebGL 时不会显示，控制台会输出 `[Live2D]` 日志。Layout 启动时还会连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
 4. **Element Plus 全量引入**：`element-plus` 与编辑器、ECharts 的 chunk 较大（构建时会有 >2500kB 警告）；已用路由懒加载 + `manualChunks` 拆分，后续可改为按需引入。
 5. **Element 图标全量别名**：`registerElementIcons` 注册全部图标，换取旧模板兼容；如关注包体可改为按需注册。
 6. **旧版 crud mixin**：`src/mixins/crud.js` 与 `@crud/crud` 并存，部分页面（用户中心、定时任务日志、代码生成配置、系统还原）仍用旧版；修改通用逻辑时注意两边。
 7. **无自动化测试**：仓库没有单元/E2E 测试；提交前至少执行 `npm run lint` 与 `npm run build`。
 8. **`build:stage`**：`.env.staging` 是占位配置（默认 `/server-api`），部署前按实际 staging 环境修改。
-9. **Sass 弃用警告**：大量 `@import` 仍为历史写法，Dart Sass 会提示 `@import` 将在 3.0 移除；后续可统一迁移到 `@use`。
+9. **SCSS 模块系统**：样式已迁移到 `@use`，构建时不应再出现 `@import` 弃用警告；新增 SCSS 请沿用 `@use` 写法。
 10. **token key 拼写**：`settings.js` 中为历史拼写 `EL-ADMIN-TOEKN`，改名会使所有用户登录态失效。
 11. **主题色持久化**：默认主色 `#1890ff`；Cookie 里的旧主题色若非法会被 `applyTheme` 忽略。Element Plus 的 `--el-color-primary-*` 变量在 `src/assets/styles/element-variables.scss` 中初始化，运行时由 `applyTheme` 覆盖。
 12. **dev server 不自动开浏览器**：`vite.config.js` 中 `server.open: false`，避免 CI/Agent 环境弹出浏览器；需要时手动访问 `http://localhost:8013`。

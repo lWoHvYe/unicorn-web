@@ -61,6 +61,10 @@ npm run lint
 VUE_APP_BASE_API='https://localhost:8081'
 # WebSocket 地址
 VUE_APP_WS_API='wss://localhost:8081'
+
+# Live2D 看板娘资源 CDN（可选，默认 fastly.jsdelivr.net）
+# VITE_LIVE2D_BASE='https://fastly.jsdelivr.net/npm/live2d-widgets@0/'
+# VITE_LIVE2D_MODEL_CDN='https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/'
 ```
 
 说明：
@@ -98,8 +102,9 @@ VUE_APP_WS_API='wss://localhost:8081'
 1. **Node 版本**：Vite 8 要求 Node 20.19+；低版本 Node 请升级，不再需要 `NODE_OPTIONS=--openssl-legacy-provider`。
 2. **本地后端为 HTTPS 自签名证书**：Vite 代理已设置 `secure: false`；如接口仍报证书错误，请检查后端证书或改用 HTTP。
 3. **首页 WebSocket 报错**：Layout 启动时会连接 `VUE_APP_WS_API`，后端未启动时出现连接失败提示属正常现象。
-4. **构建 chunk 过大**：Element Plus、ECharts、编辑器均为大依赖，构建时会出现 chunk 体积警告；页面已按路由懒加载，可在 `vite.config.js` 的 `manualChunks` 中继续优化。
-5. **没有测试用例**：仓库暂未包含单元/E2E 测试，提交前以 `npm run lint` + `npm run build` 为准。
+4. **Live2D 看板娘不显示**：默认从 jsDelivr 加载脚本和模型，并依赖浏览器 WebGL；如网络无法访问 CDN，可设置 `VITE_LIVE2D_BASE`（脚本资源）和 `VITE_LIVE2D_MODEL_CDN`（模型资源）指向可用镜像。控制台搜索 `[Live2D]` 可查看回退日志。
+5. **构建 chunk 过大**：Element Plus、ECharts、编辑器均为大依赖，构建时会出现 chunk 体积警告；页面已按路由懒加载，可在 `vite.config.js` 的 `manualChunks` 中继续优化。
+6. **没有测试用例**：仓库暂未包含单元/E2E 测试，提交前以 `npm run lint` + `npm run build` 为准。
 
 #### 特别鸣谢
 

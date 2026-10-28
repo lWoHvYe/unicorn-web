@@ -1,11 +1,9 @@
-@import 'element-variables';
-@import 'variables';
-@import 'mixin';
-@import 'transition';
-@import 'element-ui';
-@import 'sidebar';
-@import 'btn';
-@import 'eladmin';
+@use 'element-variables';
+@use 'transition';
+@use 'element-ui';
+@use 'sidebar';
+@use 'btn';
+@use 'eladmin';
 
 body {
   height: 100%;
