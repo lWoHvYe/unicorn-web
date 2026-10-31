@@ -57,11 +57,11 @@
 </template>
 
 <script>
-import crud from '@/mixins/crud'
+import table from '@/mixins/table'
 import DateRangePicker from '@/components/DateRangePicker'
 export default {
   components: { DateRangePicker },
-  mixins: [crud],
+  mixins: [table],
   data() {
     return {
       title: '任务日志',

@@ -36,12 +36,12 @@
 </template>
 
 <script>
-import crud from '@/mixins/crud'
+import table from '@/mixins/table'
 import { reducte } from '@/api/mnt/deployHistory'
 import DateRangePicker from '@/components/DateRangePicker'
 export default {
   components: { DateRangePicker },
-  mixins: [crud],
+  mixins: [table],
   props: {
     appName: {
       type: String,

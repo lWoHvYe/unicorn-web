@@ -63,7 +63,7 @@ Vue 2 专用依赖已全部移除：`element-ui`、`vue-router@3`、`vuex@3`、`
     │   ├── CountTo/          # 数字滚动（替代 vue-count-to）
     │   └── ...               # 面包屑、搜索、全屏、上传、编辑器等
     ├── layout/               # 主框架：Sidebar / Navbar / TagsView / AppMain / Settings
-    ├── mixins/               # 旧版页面共用的 crud mixin（逐步被 @crud 取代）
+    ├── mixins/               # 轻量列表/分页 mixin（table.js；CRUD 页面用 @crud）
     ├── plugins/              # element-icons / highlight 等全局插件
     ├── router/
     │   ├── routers.js        # 静态路由 + createRouter
@@ -187,7 +187,12 @@ Vue 3 迁移后的关键点：
 - 页面模板通常包含 `<crudOperation>`、`<rrOperation>`、`<udOperation>`、`<pagination>`。
 - 钩子名称：`beforeCrudRefresh`、`afterCrudRefresh`、`beforeCrudSubmitCU` 等（见 `CRUD.HOOK`）。
 
-旧版 `src/mixins/crud.js` 仍被 `generator/config`、`system/user/center`、`system/timing/log`、`mnt/deploy/sysRestore` 使用；新页面优先用 `@crud/crud`。
+`src/mixins/crud.js` 已移除。`generator/config`、`system/user/center`、`system/timing/log`、`mnt/deploy/sysRestore` 只需要列表/分页/导出，统一改用轻量 `src/mixins/table.js`；新增带增删改表单的页面优先用 `@crud/crud`。
+
+`table.js` 的约定：
+- `init()` 先执行 `beforeInit()`（可修改 `url`/`params`/`sort`，返回 false 跳过请求），再请求列表；错误由 request 拦截器提示，`loading` 在 finally 结束。
+- `page` 为后端 0 基页码，模板分页使用 `page + 1`；`toQuery()`/`pageChange()`/`sizeChange()` 返回 `init()` 的 Promise，便于测试或串联。
+- `downloadMethod()` 导出时带上排序/查询/params，但不带 `page`/`size`，避免只导出当前页。
 
 ### 6.6 布局、标签页与缓存
 
@@ -258,7 +263,7 @@ Vue 3 迁移后的关键点：
 3. **Live2D 与 WebSocket**：Live2D 默认关闭（`VITE_ENABLE_LIVE2D='false'`），避免从第三方 CDN 动态执行脚本；启用时才会加载 `live2d-widgets` 与模型 CDN，可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖地址。WebSocket 消息按纯文本渲染，不再使用 `dangerouslyUseHTMLString`；Layout 启动时连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
 4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 0.95MB raw / 0.30MB gzip），禁止 editor/echarts chunk 进入首屏。首页 ECharts 已改为按需注册 + 异步组件，仪表盘图表包约从 1.2MB 降到 0.9MB；Element Plus 已改为按需引入。
 5. **Element 图标与 resolver**：`registerElementIcons` 仍注册模板字符串里用到的图标别名；`unplugin-vue-components` 会把形如 `<el-icon-xxx>` 的标签解析为 `@element-plus/icons-vue` 组件。注意不要给本地组件起 `elXxx` 这类名字（例如 `elFrame` 会被误判为 Element Plus 组件），本项目已改为 `AppFrame`。图标模块 `@element-plus/icons-vue` 目前仍会整体进入首屏 chunk（约 170KB），这是后续可继续优化的点。
-6. **旧版 crud mixin**：`src/mixins/crud.js` 与 `@crud/crud` 并存，部分页面（用户中心、定时任务日志、代码生成配置、系统还原）仍用旧版；修改通用逻辑时注意两边。
+6. **列表 mixin**：`src/mixins/table.js` 只负责列表/分页/导出，不再包含增删改表单；`@crud/crud` 负责完整 CRUD 页面。4 个历史页面（用户中心、定时任务日志、代码生成配置、系统还原）已迁移到 `table.js`。
 7. **测试与 CI**：已加入 Vitest 单元测试（`npm run test:unit`）与 GitHub Actions；提交/合并前建议执行 `npm run verify`。E2E 仍暂缺。
 8. **`build:stage`**：`.env.staging` 是占位配置（默认 `/server-api`），部署前按实际 staging 环境修改。
 9. **SCSS 模块系统**：样式已迁移到 `@use`，构建时不应再出现 `@import` 弃用警告；新增 SCSS 请沿用 `@use` 写法。

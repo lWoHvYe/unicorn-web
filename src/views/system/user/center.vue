@@ -112,13 +112,13 @@ import updateEmail from './center/updateEmail'
 import { getToken } from '@/utils/auth'
 import store from '@/store'
 import { isvalidPhone } from '@/utils/validate'
-import crud from '@/mixins/crud'
+import table from '@/mixins/table'
 import { editUser } from '@/api/system/user'
 import Avatar from '@/assets/images/avatar.png'
 export default {
   name: 'Center',
   components: { updatePass, updateEmail, AvatarCropper },
-  mixins: [crud],
+  mixins: [table],
   data() {
     // 自定义验证
     const validPhone = (rule, value, callback) => {

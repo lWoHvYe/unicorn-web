@@ -198,14 +198,14 @@
 </template>
 
 <script>
-import crud from '@/mixins/crud'
+import table from '@/mixins/table'
 import { update, get } from '@/api/generator/genConfig'
 import { save, sync, generator } from '@/api/generator/generator'
 import { getDicts } from '@/api/system/dict'
 export default {
   name: 'GeneratorConfig',
   components: {},
-  mixins: [crud],
+  mixins: [table],
   data() {
     return {
       activeName: 'first', tableName: '', tableHeight: 550, columnLoading: false, configLoading: false, dicts: [], syncLoading: false, genLoading: false,
