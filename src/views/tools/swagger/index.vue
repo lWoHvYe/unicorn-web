@@ -1,12 +1,12 @@
 <template>
-  <elFrame :src="swaggerApi" />
+  <app-frame :src="swaggerApi" />
 </template>
 <script>
 import { mapGetters } from 'vuex'
-import elFrame from '@/components/Iframe/index'
+import AppFrame from '@/components/Iframe/index'
 export default {
   name: 'Swagger',
-  components: { elFrame },
+  components: { AppFrame },
   computed: {
     ...mapGetters([
       'swaggerApi'

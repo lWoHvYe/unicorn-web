@@ -21,7 +21,7 @@ EL-ADMIN 前端源码，当前技术栈：**Vue 3 + Vite + Element Plus**。
 | --- | --- |
 | 框架 | Vue 3.5 |
 | 构建 | Vite 8 |
-| UI | Element Plus 2.14 |
+| UI | Element Plus 2.14（按需引入） |
 | 路由 | Vue Router 4（hash 模式） |
 | 状态 | Vuex 4 |
 | 图表 | ECharts 6.1 + vue-echarts 8 |
@@ -116,7 +116,7 @@ VITE_ENABLE_LIVE2D='false'
 2. **本地后端为 HTTPS 自签名证书**：Vite 代理已设置 `secure: false`；如接口仍报证书错误，请检查后端证书或改用 HTTP。
 3. **首页 WebSocket 报错**：Layout 启动时会连接 `VUE_APP_WS_API`，后端未启动时出现连接失败提示属正常现象。
 4. **Live2D 看板娘不显示**：默认关闭（`VITE_ENABLE_LIVE2D='false'`）；启用后才会从 CDN 加载脚本和模型，并依赖浏览器 WebGL。如网络无法访问 CDN，可设置 `VITE_LIVE2D_BASE` / `VITE_LIVE2D_MODEL_CDN` 指向可用镜像。
-5. **构建 chunk 过大**：Element Plus、ECharts、编辑器仍是大依赖；首屏已通过默认 Rolldown 分包控制到约 1.8MB raw / 0.5MB gzip，`npm run check:bundle` 会阻止 editor/echarts chunk 回到首屏。
+5. **构建 chunk 过大**：Element Plus 已按需引入，ECharts 使用 `echarts/core` 按需注册，首页图表异步加载；首屏当前约 0.95MB raw / 0.30MB gzip，`npm run check:bundle` 会阻止 editor/echarts chunk 回到首屏。
 6. **测试**：已包含 Vitest 单元测试和 GitHub Actions；提交前建议执行 `npm run verify`。E2E 测试暂缺。
 7. **Excel 导入**：`UploadExcel` 现在只接受 `.xlsx`；如需 `.xls`/`.csv`，请先转换格式或改用其他解析库。
 

@@ -15,7 +15,7 @@
 | --- | --- |
 | 框架 | Vue 3.5.x（Options API 为主，少量 Composition API） |
 | 构建 | Vite 8 + Rolldown，`vite.config.js` |
-| UI | Element Plus 2.14（全量引入，中文 locale，默认 size `small`） |
+| UI | Element Plus 2.14（按需引入，中文 locale，默认 size `small`） |
 | 路由 | Vue Router 4，hash 模式，后端菜单动态 `addRoute` |
 | 状态 | Vuex 4，按模块显式注册 |
 | 样式 | SCSS（Dart Sass），`normalize.css`，Element Plus CSS 变量主题 |
@@ -107,11 +107,13 @@ npm run svgo                # 压缩 src/assets/icons/svg 下的 SVG
 
 1. `createApp(App)`；
 2. `app.use(store)`、`app.use(router)`；
-3. `app.use(ElementPlus, { size, locale: zhCn })`（全量引入 + `element-plus/dist/index.css`）；
+3. `provideGlobalConfig({ locale: zhCn, size }, app, true)`，并通过 `app.config.globalProperties` 注入 `$message` / `$notify` / `$confirm` 等 Element Plus 全局方法；模板中的 `el-*` 组件与 `v-loading` 由 `unplugin-vue-components` 的 `ElementPlusResolver` 按需导入；
 4. `app.use(checkPer)`、`app.use(permission)`、`app.use(dict)`（全局 mixin）、`app.use(svgIcons)`；
 5. `app.use(highlight)`（`v-highlightjs` 指令）；
-6. `registerElementIcons(app)`：注册全部 Element Plus 图标及其 `el-icon-*` 别名；
+6. `registerElementIcons(app)`：注册模板字符串中使用的 Element Plus 图标及 `el-icon-*` 别名；
 7. `applyTheme(Cookies.get('theme') || settings.theme)`，最后 `app.mount('#app')`。
+
+Element Plus 的基础变量/过渡样式在入口显式引入 `element-plus/theme-chalk/base.css`；`ElMessage` / `ElMessageBox` / `ElNotification` / `ElLoading` 的样式由 `main.js` 显式引入。新增 Element Plus 服务或指令时，若未走模板 resolver，需要同时引入对应 `element-plus/es/components/<name>/style/css`。
 
 `src/App.vue` 用 `<el-config-provider :locale="zhCn" :size="size">` 包裹 `<router-view />`，size 来自 Vuex `app.size`（Cookie 持久化，只接受 `large/default/small`）。
 
@@ -203,11 +205,11 @@ Vue 3 迁移后的关键点：
   `import.meta.glob('./svg/*.svg', { query: '?raw', import: 'default', eager: true })`
   读取原始内容，运行时拼成 `<symbol>` 雪碧图注入 body（等价于原 svg-sprite-loader）。
 - 全局组件 `<svg-icon icon-class="user" />`；`icon-class` 也支持外链（mask 样式）。
-- Element Plus 字体图标已移除。`src/plugins/element-icons.js` 把 `@element-plus/icons-vue` 的全部图标注册为：
+- Element Plus 字体图标已移除。`src/plugins/element-icons.js` 只注册模板字符串中实际使用的图标（`<el-icon-*>` 标签由 `unplugin-vue-components` 自动解析），同时保留：
   - PascalCase（如 `Plus`）；
   - `el-icon-plus` 形式（历史模板 `icon="el-icon-plus"`、`prefix-icon="el-icon-search"` 仍可用）；
   - 额外兼容 `el-icon-s-grid` / `el-icon-s-tools` / `el-icon-s-promotion`。
-- 新代码推荐 `<el-icon-plus />` 或 `:icon="Plus"`（显式 import），少用字符串别名。
+- 新代码推荐 `<el-icon-plus />` 或 `:icon="Plus"`（显式 import），少用字符串别名。若新增了模板字符串图标，需要同步加入 `plugins/element-icons.js` 的白名单。
 
 ### 6.8 富文本、Markdown、代码编辑
 
@@ -254,8 +256,8 @@ Vue 3 迁移后的关键点：
 1. **ECharts 6 视觉细节**：已升级到 ECharts 6.1 + `vue-echarts` 8；图表 option 大多兼容，但仍建议对监控页、首页和组件示例页做视觉 QA。控制台可能出现 “ticks may be not readable when set min/max” 警告，可按需调整 `min`/`max`/`splitNumber` 或忽略。
 2. **WebGL**：`echarts-gl` / `components/Echarts/Line3D.vue` 以及 Live2D 看板娘都需要 WebGL；无 GPU/无头浏览器会报 WebGL 错误，属环境限制。
 3. **Live2D 与 WebSocket**：Live2D 默认关闭（`VITE_ENABLE_LIVE2D='false'`），避免从第三方 CDN 动态执行脚本；启用时才会加载 `live2d-widgets` 与模型 CDN，可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖地址。WebSocket 消息按纯文本渲染，不再使用 `dangerouslyUseHTMLString`；Layout 启动时连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
-4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 1.8MB raw / 0.5MB gzip），禁止 editor/echarts chunk 进入首屏。首页 ECharts 已改为按需注册 + 异步组件，仪表盘图表包约从 1.2MB 降到 0.9MB；Element Plus 仍为全量引入，是后续最大的优化点。
-5. **Element 图标全量别名**：`registerElementIcons` 注册全部图标，换取旧模板兼容；如关注包体可改为按需注册。
+4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 0.95MB raw / 0.30MB gzip），禁止 editor/echarts chunk 进入首屏。首页 ECharts 已改为按需注册 + 异步组件，仪表盘图表包约从 1.2MB 降到 0.9MB；Element Plus 已改为按需引入。
+5. **Element 图标与 resolver**：`registerElementIcons` 仍注册模板字符串里用到的图标别名；`unplugin-vue-components` 会把形如 `<el-icon-xxx>` 的标签解析为 `@element-plus/icons-vue` 组件。注意不要给本地组件起 `elXxx` 这类名字（例如 `elFrame` 会被误判为 Element Plus 组件），本项目已改为 `AppFrame`。图标模块 `@element-plus/icons-vue` 目前仍会整体进入首屏 chunk（约 170KB），这是后续可继续优化的点。
 6. **旧版 crud mixin**：`src/mixins/crud.js` 与 `@crud/crud` 并存，部分页面（用户中心、定时任务日志、代码生成配置、系统还原）仍用旧版；修改通用逻辑时注意两边。
 7. **测试与 CI**：已加入 Vitest 单元测试（`npm run test:unit`）与 GitHub Actions；提交/合并前建议执行 `npm run verify`。E2E 仍暂缺。
 8. **`build:stage`**：`.env.staging` 是占位配置（默认 `/server-api`），部署前按实际 staging 环境修改。
