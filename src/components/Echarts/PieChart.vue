@@ -3,8 +3,7 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
-import 'echarts/theme/macarons' // echarts theme
+import echarts from '@/utils/echarts'
 import { debounce } from '@/utils'
 
 export default {

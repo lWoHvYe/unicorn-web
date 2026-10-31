@@ -218,11 +218,12 @@ Vue 3 迁移后的关键点：
 
 ### 6.9 图表
 
-- `components/Echarts/*.vue` 每个组件自行 `echarts.init(this.$el, 'macarons')`，监听 resize，`beforeUnmount` 中 `dispose`。
-- 主题 `macarons` 通过 `import 'echarts/theme/macarons'` 注册；ECharts 6 仍兼容该主题路径。
-- 监控页 `views/monitor/server/index.vue` 使用 `vue-echarts` 8：`<v-chart :option="..." autoresize />`，并显式 `use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])`。
-- `echarts-gl` 只在 `Line3D.vue` 中按需引入（不再全局引入）。
+- 普通 2D 组件（Bar/Pie/Radar/Line/Funnel/Gauge/Graph/HeatMap/Scatter/Sunburst/Sankey/ThemeRiver）统一从 `src/utils/echarts.js` 导入按需注册的 `echarts/core`，不再各自 `import * as echarts from 'echarts'`；注册项与主题对象分别见 `src/utils/echarts.js`、`src/utils/echarts-theme.js`。
+- `components/Echarts/*.vue` 每个组件自行 `echarts.init(this.$el, 'macarons')`，监听 resize，`beforeUnmount` 中 `dispose`。主题 `macarons` 由本地纯对象注册，避免 `import 'echarts/theme/macarons'` 把完整 ECharts 带入包体。
+- 首页图表使用 `defineAsyncComponent` 异步加载，先渲染面板骨架；监控页 `views/monitor/server/index.vue` 仍使用 `vue-echarts` 8：`<v-chart :option="..." autoresize />`，并显式 `use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])`。
+- `echarts-gl` 只在 `Line3D.vue` 中按需引入；`echarts-wordcloud` 只在 `WordCloud.vue` 中引入。两者保留完整 ECharts/插件导入，体积较大但均为示例页懒加载。
 - `echarts-wordcloud` 的 peer 仍声明 `echarts ^5`，项目通过 `.npmrc` 的 `legacy-peer-deps=true` 与 ECharts 6 共存；该组件仅用于组件示例页，如后续出现运行时不兼容需单独降级/替换。
+- 新增 2D 图表时，如果用到新的 series/component，必须在 `src/utils/echarts.js` 的 `use([])` 中登记，否则运行时会提示未注册。
 
 ### 6.10 日期范围与头像上传
 
@@ -253,7 +254,7 @@ Vue 3 迁移后的关键点：
 1. **ECharts 6 视觉细节**：已升级到 ECharts 6.1 + `vue-echarts` 8；图表 option 大多兼容，但仍建议对监控页、首页和组件示例页做视觉 QA。控制台可能出现 “ticks may be not readable when set min/max” 警告，可按需调整 `min`/`max`/`splitNumber` 或忽略。
 2. **WebGL**：`echarts-gl` / `components/Echarts/Line3D.vue` 以及 Live2D 看板娘都需要 WebGL；无 GPU/无头浏览器会报 WebGL 错误，属环境限制。
 3. **Live2D 与 WebSocket**：Live2D 默认关闭（`VITE_ENABLE_LIVE2D='false'`），避免从第三方 CDN 动态执行脚本；启用时才会加载 `live2d-widgets` 与模型 CDN，可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖地址。WebSocket 消息按纯文本渲染，不再使用 `dangerouslyUseHTMLString`；Layout 启动时连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
-4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 1.8MB raw / 0.5MB gzip），禁止 editor/echarts chunk 进入首屏。Element Plus 仍为全量引入，后续可按需引入进一步优化。
+4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 1.8MB raw / 0.5MB gzip），禁止 editor/echarts chunk 进入首屏。首页 ECharts 已改为按需注册 + 异步组件，仪表盘图表包约从 1.2MB 降到 0.9MB；Element Plus 仍为全量引入，是后续最大的优化点。
 5. **Element 图标全量别名**：`registerElementIcons` 注册全部图标，换取旧模板兼容；如关注包体可改为按需注册。
 6. **旧版 crud mixin**：`src/mixins/crud.js` 与 `@crud/crud` 并存，部分页面（用户中心、定时任务日志、代码生成配置、系统还原）仍用旧版；修改通用逻辑时注意两边。
 7. **测试与 CI**：已加入 Vitest 单元测试（`npm run test:unit`）与 GitHub Actions；提交/合并前建议执行 `npm run verify`。E2E 仍暂缺。

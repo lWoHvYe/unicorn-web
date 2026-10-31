@@ -106,7 +106,7 @@ VITE_ENABLE_LIVE2D='false'
 - `vue-router@3` → `vue-router@4`（`addRoutes` → `addRoute`），`vuex@3` → `vuex@4`。
 - `mavon-editor` → `md-editor-v3`；wangEditor 4 → wangEditor 5；`vue-count-to`/`vue-image-crop-upload`/`vue-highlightjs` 由本地组件或 `highlight.js` 替代。
 - `@riophae/vue-treeselect`（及不兼容 Vue 3 的 `vue3-treeselect`）替换为 Element Plus `el-tree-select`。
-- ECharts 4 → 6.1（`vue-echarts` 8），图表 option 中的 `normal` 嵌套已扁平化。
+- ECharts 4 → 6.1（`vue-echarts` 8），图表 option 中的 `normal` 嵌套已扁平化；普通 2D 图表改为 `echarts/core` 按需注册，首页图表异步加载。
 - `xlsx` 替换为 `read-excel-file`（仅支持 .xlsx），消除高危漏洞。
 - 已移除 `node-sass`、`babel`、`jest`、`plop` 等 Vue 2 时代工具链。
 

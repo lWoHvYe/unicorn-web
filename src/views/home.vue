@@ -31,13 +31,17 @@
 </template>
 
 <script>
+import { defineAsyncComponent } from 'vue'
 import GithubCorner from '@/components/GithubCorner'
 import PanelGroup from './dashboard/PanelGroup'
-import LineChart from './dashboard/LineChart'
-import RadarChart from '@/components/Echarts/RadarChart'
-import PieChart from '@/components/Echarts/PieChart'
-import BarChart from '@/components/Echarts/BarChart'
 import Live2DWidget from '@/components/Live2D/Live2DWidget.vue'
+
+// 图表依赖 ECharts（约 900KB），异步加载可以让首页骨架先渲染。
+// 各图表组件仍会在挂载后立即并行下载，不改变最终内容。
+const LineChart = defineAsyncComponent(() => import('./dashboard/LineChart'))
+const RadarChart = defineAsyncComponent(() => import('@/components/Echarts/RadarChart'))
+const PieChart = defineAsyncComponent(() => import('@/components/Echarts/PieChart'))
+const BarChart = defineAsyncComponent(() => import('@/components/Echarts/BarChart'))
 
 const lineChartData = {
   newVisitis: {
