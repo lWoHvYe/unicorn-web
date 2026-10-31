@@ -19,7 +19,7 @@
 | 路由 | Vue Router 4，hash 模式，后端菜单动态 `addRoute` |
 | 状态 | Vuex 4，按模块显式注册 |
 | 样式 | SCSS（Dart Sass），`normalize.css`，Element Plus CSS 变量主题 |
-| 图表 | ECharts 5.6 + `vue-echarts` 7（监控页）；`echarts-gl`、`echarts-wordcloud` |
+| 图表 | ECharts 6.1 + `vue-echarts` 8（监控页）；`echarts-gl`、`echarts-wordcloud` |
 | Markdown | `md-editor-v3` 7 |
 | 富文本 | wangEditor 5（`@wangeditor/editor` + `editor-for-vue`） |
 | 代码编辑/高亮 | CodeMirror 5；`highlight.js` 11（`v-highlightjs` 指令） |
@@ -87,13 +87,17 @@ npm run build:stage         # 使用 .env.staging 构建
 npm run preview             # 预览 dist/，端口 8013
 npm run lint                # ESLint 检查 src
 npm run lint:fix            # ESLint 自动修复
+npm run lint:ci             # ESLint + --max-warnings=0（CI 使用）
+npm run test:unit           # Vitest 单元测试
+npm run check:bundle        # 校验 dist/index.html 首屏预算
+npm run verify              # lint + test + build + bundle budget
 npm run svgo                # 压缩 src/assets/icons/svg 下的 SVG
 ```
 
 说明：
 
 - 路由使用 **hash 模式**；生产 `base` 为 `./`，可直接部署到任意静态目录；开发为 `/`。
-- 开发代理：`/api`、`/auth`、`/captcha` → `VUE_APP_BASE_API`，`changeOrigin: true`、`secure: false`（兼容本地自签名 HTTPS 后端），不做 path rewrite。
+- 开发代理：`/api`、`/auth`、`/captcha`、`/file`、`/avatar` → `VUE_APP_BASE_API`，`changeOrigin: true`、`secure: false`（兼容本地自签名 HTTPS 后端），不做 path rewrite。
 - 生产默认接口前缀 `/server-api`（适合 Nginx 反向代理）；WebSocket 使用 `VUE_APP_WS_API`。
 - `VUE_APP_*` 通过 Vite `envPrefix` 注入，访问方式为 `import.meta.env.VUE_APP_XXX`。
 
@@ -132,10 +136,12 @@ npm run svgo                # 压缩 src/assets/icons/svg 下的 SVG
 `src/utils/request.js`：
 
 - dev 环境 `baseURL = '/'`（走代理）；生产为 `import.meta.env.VUE_APP_BASE_API`。
-- 请求头自动带 `Authorization`（token）与 `Content-Type: application/json`。
+- 请求头自动带 `Authorization`（token）；不再强制 `Content-Type: application/json`，由 axios 根据 JSON/FormData 自动设置。
 - 响应拦截器直接返回 `response.data`，业务代码拿到的不是 axios response。
-- 错误处理兼容 blob 下载错误；`401` 触发 `LogOut` 并刷新，`403` 跳 `/401`，其它用 `ElNotification.error` 提示。
-- 超时时间来自 `settings.js`（1200000ms）。
+- 错误处理兼容 blob 下载错误；`401` 有模块级 `isLoggingOut` 守卫，`LogOut` 内部调用登出接口即使再次 401 也不会递归；`403` 跳 `/401`，其它用 `ElNotification.error` 提示。
+- 超时时间默认来自 `settings.js` 的 `timeout`（30 秒）；文件导出使用 `longTimeout`（5 分钟）。
+- `LogOut` action 在网络失败时也会在 `finally` 清理 token/roles/user/loadMenus 并 resolve，调用方可以安全 `.then(reload)`。
+- 上传统一走 `utils/upload.js` → 共享 request 实例（保留 Authorization 与错误拦截），不再直接使用裸 axios。
 - 网络错误/超时分别提示「网络连接异常」「网络请求超时」。
 
 ### 6.3 权限
@@ -205,7 +211,7 @@ Vue 3 迁移后的关键点：
 
 ### 6.8 富文本、Markdown、代码编辑
 
-- `components/RichEditor/index.vue` 封装 wangEditor 5（`Toolbar` + `Editor`），自定义图片上传走 `store.getters.imagesUploadApi`；`views/components/Editor.vue` 与 `views/tools/email/send.vue` 复用它。
+- `components/RichEditor/index.vue` 封装 wangEditor 5（`Toolbar` + `Editor`），自定义图片上传走 `store.getters.imagesUploadApi`；`views/components/Editor.vue` 与 `views/tools/email/send.vue` 复用它。`Editor.vue` 的 HTML 预览经 DOMPurify 清洗后再 `v-html`。
 - `views/components/MarkDown.vue` 使用 `md-editor-v3` 的 `<MdEditor v-model>`，图片上传回调 `onUploadImg`。
 - `components/JavaEdit`、`components/YamlEdit` 使用 CodeMirror 5（`fromTextArea`），保持 `changed` / `input` 事件。
 - `v-highlightjs="code"` 由 `src/plugins/highlight.js` 实现（highlight.js + atom-one-dark 主题）。
@@ -213,14 +219,16 @@ Vue 3 迁移后的关键点：
 ### 6.9 图表
 
 - `components/Echarts/*.vue` 每个组件自行 `echarts.init(this.$el, 'macarons')`，监听 resize，`beforeUnmount` 中 `dispose`。
-- 主题 `macarons` 通过 `import 'echarts/theme/macarons'` 注册；ECharts 5 的扁平样式（`areaStyle.color`、`itemStyle.color`、`lineStyle.color`）已替换 ECharts 4 的 `normal` 嵌套。
-- 监控页 `views/monitor/server/index.vue` 使用 `vue-echarts` 7：`<v-chart :option="..." autoresize />`，并显式 `use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])`。
+- 主题 `macarons` 通过 `import 'echarts/theme/macarons'` 注册；ECharts 6 仍兼容该主题路径。
+- 监控页 `views/monitor/server/index.vue` 使用 `vue-echarts` 8：`<v-chart :option="..." autoresize />`，并显式 `use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])`。
 - `echarts-gl` 只在 `Line3D.vue` 中按需引入（不再全局引入）。
+- `echarts-wordcloud` 的 peer 仍声明 `echarts ^5`，项目通过 `.npmrc` 的 `legacy-peer-deps=true` 与 ECharts 6 共存；该组件仅用于组件示例页，如后续出现运行时不兼容需单独降级/替换。
 
 ### 6.10 日期范围与头像上传
 
 - `components/DateRangePicker` 已重写为 Element Plus 包装组件：`v-model` 使用 `modelValue/update:modelValue`；`shortcuts` 使用 EP 的 `{ text, value: () => [start, end] }` 结构；`value-format` 默认改为 dayjs 标记 `YYYY-MM-DD HH:mm:ss`。
 - `components/AvatarCropper` 使用 cropperjs 替代 `vue-image-crop-upload`，裁剪后以 `FormData` 上传（字段名默认 `avatar`），事件名保持 `crop-upload-success`。
+- `components/UploadExcel` 使用 `read-excel-file/browser`，只支持 `.xlsx`，返回 `{ header, results }`；替换 `xlsx` 是为了消除原型污染/ReDoS 高危漏洞。
 
 ## 7. 编码约定
 
@@ -242,13 +250,13 @@ Vue 3 迁移后的关键点：
 
 ## 8. 已知问题与坑点
 
-1. **ECharts 5 视觉细节**：图表 option 从 ECharts 4 迁移，已扁平化 `normal`；部分 `textStyle` 嵌套/刻度配置可能仍需按实际页面做视觉 QA。控制台可能出现 “ticks may be not readable when set min/max” 警告，可按需调整 `min`/`max`/`splitNumber` 或忽略。
+1. **ECharts 6 视觉细节**：已升级到 ECharts 6.1 + `vue-echarts` 8；图表 option 大多兼容，但仍建议对监控页、首页和组件示例页做视觉 QA。控制台可能出现 “ticks may be not readable when set min/max” 警告，可按需调整 `min`/`max`/`splitNumber` 或忽略。
 2. **WebGL**：`echarts-gl` / `components/Echarts/Line3D.vue` 以及 Live2D 看板娘都需要 WebGL；无 GPU/无头浏览器会报 WebGL 错误，属环境限制。
-3. **Live2D 与 WebSocket**：`components/Live2D/Live2DWidget.vue` 会依次尝试 fastly / unpkg / jsDelivr 加载 `live2d-widgets@0` 的 `waifu.css`、`live2d.min.js`、`waifu-tips.js`，模型来自 `fghrsh/live2d_api`；可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖资源地址。CDN 不可达或浏览器无 WebGL 时不会显示，控制台会输出 `[Live2D]` 日志。Layout 启动时还会连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
-4. **Element Plus 全量引入**：`element-plus` 与编辑器、ECharts 的 chunk 较大（构建时会有 >2500kB 警告）；已用路由懒加载 + `manualChunks` 拆分，后续可改为按需引入。
+3. **Live2D 与 WebSocket**：Live2D 默认关闭（`VITE_ENABLE_LIVE2D='false'`），避免从第三方 CDN 动态执行脚本；启用时才会加载 `live2d-widgets` 与模型 CDN，可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖地址。WebSocket 消息按纯文本渲染，不再使用 `dangerouslyUseHTMLString`；Layout 启动时连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
+4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 1.8MB raw / 0.5MB gzip），禁止 editor/echarts chunk 进入首屏。Element Plus 仍为全量引入，后续可按需引入进一步优化。
 5. **Element 图标全量别名**：`registerElementIcons` 注册全部图标，换取旧模板兼容；如关注包体可改为按需注册。
 6. **旧版 crud mixin**：`src/mixins/crud.js` 与 `@crud/crud` 并存，部分页面（用户中心、定时任务日志、代码生成配置、系统还原）仍用旧版；修改通用逻辑时注意两边。
-7. **无自动化测试**：仓库没有单元/E2E 测试；提交前至少执行 `npm run lint` 与 `npm run build`。
+7. **测试与 CI**：已加入 Vitest 单元测试（`npm run test:unit`）与 GitHub Actions；提交/合并前建议执行 `npm run verify`。E2E 仍暂缺。
 8. **`build:stage`**：`.env.staging` 是占位配置（默认 `/server-api`），部署前按实际 staging 环境修改。
 9. **SCSS 模块系统**：样式已迁移到 `@use`，构建时不应再出现 `@import` 弃用警告；新增 SCSS 请沿用 `@use` 写法。
 10. **token key 拼写**：`settings.js` 中为历史拼写 `EL-ADMIN-TOEKN`，改名会使所有用户登录态失效。

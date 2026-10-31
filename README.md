@@ -24,8 +24,10 @@ EL-ADMIN 前端源码，当前技术栈：**Vue 3 + Vite + Element Plus**。
 | UI | Element Plus 2.14 |
 | 路由 | Vue Router 4（hash 模式） |
 | 状态 | Vuex 4 |
-| 图表 | ECharts 5 + vue-echarts 7 |
+| 图表 | ECharts 6.1 + vue-echarts 8 |
 | 编辑器 | md-editor-v3、wangEditor 5、CodeMirror 5 |
+| 表格导入 | read-excel-file（仅 .xlsx） |
+| 测试 | Vitest + happy-dom |
 | Lint | ESLint 10（flat config） |
 
 #### 环境要求
@@ -50,6 +52,15 @@ npm run preview
 
 # 代码检查
 npm run lint
+
+# 单元测试
+npm run test:unit
+
+# 首屏体积预算检查（需先 build）
+npm run check:bundle
+
+# 一次性执行 lint + test + build + bundle budget
+npm run verify
 ```
 
 #### 环境变量
@@ -62,14 +73,15 @@ VUE_APP_BASE_API='https://localhost:8081'
 # WebSocket 地址
 VUE_APP_WS_API='wss://localhost:8081'
 
-# Live2D 看板娘资源 CDN（可选，默认 fastly.jsdelivr.net）
+# Live2D 看板娘默认关闭；确需启用时再打开
+VITE_ENABLE_LIVE2D='false'
 # VITE_LIVE2D_BASE='https://fastly.jsdelivr.net/npm/live2d-widgets@0/'
 # VITE_LIVE2D_MODEL_CDN='https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/'
 ```
 
 说明：
 
-- 开发代理路径：`/api`、`/auth`、`/captcha` → `VUE_APP_BASE_API`，并允许自签名证书。
+- 开发代理路径：`/api`、`/auth`、`/captcha`、`/file`、`/avatar` → `VUE_APP_BASE_API`，并允许自签名证书。
 - 生产默认接口前缀 `/server-api`，请根据 Nginx 反向代理配置调整。
 - 路由使用 hash 模式，生产 `base` 为 `./`，可部署到任意静态目录。
 
@@ -94,7 +106,8 @@ VUE_APP_WS_API='wss://localhost:8081'
 - `vue-router@3` → `vue-router@4`（`addRoutes` → `addRoute`），`vuex@3` → `vuex@4`。
 - `mavon-editor` → `md-editor-v3`；wangEditor 4 → wangEditor 5；`vue-count-to`/`vue-image-crop-upload`/`vue-highlightjs` 由本地组件或 `highlight.js` 替代。
 - `@riophae/vue-treeselect`（及不兼容 Vue 3 的 `vue3-treeselect`）替换为 Element Plus `el-tree-select`。
-- ECharts 4 → 5，图表 option 中的 `normal` 嵌套已扁平化。
+- ECharts 4 → 6.1（`vue-echarts` 8），图表 option 中的 `normal` 嵌套已扁平化。
+- `xlsx` 替换为 `read-excel-file`（仅支持 .xlsx），消除高危漏洞。
 - 已移除 `node-sass`、`babel`、`jest`、`plop` 等 Vue 2 时代工具链。
 
 #### 常见问题
@@ -102,9 +115,10 @@ VUE_APP_WS_API='wss://localhost:8081'
 1. **Node 版本**：Vite 8 要求 Node 20.19+；低版本 Node 请升级，不再需要 `NODE_OPTIONS=--openssl-legacy-provider`。
 2. **本地后端为 HTTPS 自签名证书**：Vite 代理已设置 `secure: false`；如接口仍报证书错误，请检查后端证书或改用 HTTP。
 3. **首页 WebSocket 报错**：Layout 启动时会连接 `VUE_APP_WS_API`，后端未启动时出现连接失败提示属正常现象。
-4. **Live2D 看板娘不显示**：默认从 jsDelivr 加载脚本和模型，并依赖浏览器 WebGL；如网络无法访问 CDN，可设置 `VITE_LIVE2D_BASE`（脚本资源）和 `VITE_LIVE2D_MODEL_CDN`（模型资源）指向可用镜像。控制台搜索 `[Live2D]` 可查看回退日志。
-5. **构建 chunk 过大**：Element Plus、ECharts、编辑器均为大依赖，构建时会出现 chunk 体积警告；页面已按路由懒加载，可在 `vite.config.js` 的 `manualChunks` 中继续优化。
-6. **没有测试用例**：仓库暂未包含单元/E2E 测试，提交前以 `npm run lint` + `npm run build` 为准。
+4. **Live2D 看板娘不显示**：默认关闭（`VITE_ENABLE_LIVE2D='false'`）；启用后才会从 CDN 加载脚本和模型，并依赖浏览器 WebGL。如网络无法访问 CDN，可设置 `VITE_LIVE2D_BASE` / `VITE_LIVE2D_MODEL_CDN` 指向可用镜像。
+5. **构建 chunk 过大**：Element Plus、ECharts、编辑器仍是大依赖；首屏已通过默认 Rolldown 分包控制到约 1.8MB raw / 0.5MB gzip，`npm run check:bundle` 会阻止 editor/echarts chunk 回到首屏。
+6. **测试**：已包含 Vitest 单元测试和 GitHub Actions；提交前建议执行 `npm run verify`。E2E 测试暂缺。
+7. **Excel 导入**：`UploadExcel` 现在只接受 `.xlsx`；如需 `.xls`/`.csv`，请先转换格式或改用其他解析库。
 
 #### 特别鸣谢
 

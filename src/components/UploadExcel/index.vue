@@ -1,6 +1,6 @@
 <template>
   <div>
-    <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleClick">
+    <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx" @change="handleClick">
     <div class="drop" @drop="handleDrop" @dragover="handleDragover" @dragenter="handleDragover">
       拖拽excel文件到此处 或者
       <el-button :loading="loading" style="margin-left:16px;" size="small" type="primary" @click="handleUpload">
@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import * as XLSX from 'xlsx'
+import readXlsxFile from 'read-excel-file/browser'
 
 export default {
   props: {
@@ -45,7 +45,7 @@ export default {
       const rawFile = files[0]
 
       if (!this.isExcel(rawFile)) {
-        this.$message.error('只支持.xlsx, .xls, .csv 格式文件')
+        this.$message.error('只支持 .xlsx 格式文件')
         return false
       }
       this.upload(rawFile)
@@ -78,41 +78,39 @@ export default {
         this.readerData(rawFile)
       }
     },
-    readerData(rawFile) {
+    async readerData(rawFile) {
       this.loading = true
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = e => {
-          const data = e.target.result
-          const workbook = XLSX.read(data, { type: 'array' })
-          const firstSheetName = workbook.SheetNames[0]
-          const worksheet = workbook.Sheets[firstSheetName]
-          const header = this.getHeaderRow(worksheet)
-          const results = XLSX.utils.sheet_to_json(worksheet)
-          this.generateData({ header, results })
-          this.loading = false
-          resolve()
-        }
-        reader.readAsArrayBuffer(rawFile)
-      })
-    },
-    getHeaderRow(sheet) {
-      const headers = []
-      const range = XLSX.utils.decode_range(sheet['!ref'])
-      let C
-      const R = range.s.r
-      /* start in the first row */
-      for (C = range.s.c; C <= range.e.c; ++C) { /* walk every column in the range */
-        const cell = sheet[XLSX.utils.encode_cell({ c: C, r: R })]
-        /* find the cell in the first row */
-        let hdr = 'UNKNOWN ' + C // <-- replace with your desired default
-        if (cell && cell.t) hdr = XLSX.utils.format_cell(cell)
-        headers.push(hdr)
+      try {
+        const rows = await readXlsxFile(rawFile)
+        const headerRow = rows[0] || []
+        const header = headerRow.map((value, index) => {
+          return this.getCellText(value) || `UNKNOWN ${index}`
+        })
+        const results = rows.slice(1).map(row => {
+          const item = {}
+          header.forEach((key, index) => {
+            item[key] = this.getCellText(row[index])
+          })
+          return item
+        })
+        this.generateData({ header, results })
+      } catch (e) {
+        this.$message.error('Excel 解析失败：' + (e.message || '未知错误'))
+      } finally {
+        this.loading = false
       }
-      return headers
+    },
+    getCellText(value) {
+      if (value === null || value === undefined) {
+        return ''
+      }
+      if (value instanceof Date) {
+        return value.toISOString()
+      }
+      return String(value)
     },
     isExcel(file) {
-      return /\.(xlsx|xls|csv)$/.test(file.name)
+      return /\.xlsx$/.test(file.name)
     }
   }
 }

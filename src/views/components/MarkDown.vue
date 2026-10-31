@@ -30,17 +30,19 @@ export default {
     ])
   },
   mounted() {
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 200 + 'px'
+    this.__resizeHandler = () => {
+      this.height = document.documentElement.clientHeight - 200 + 'px'
     }
+    window.addEventListener('resize', this.__resizeHandler)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.__resizeHandler)
   },
   methods: {
     async onUploadImg(files, callback) {
       const urls = []
       for (const file of files) {
-        const res = await upload(this.imagesUploadApi, file)
-        const data = res.data
+        const data = await upload(this.imagesUploadApi, file)
         urls.push(this.baseApi + '/file/' + data.type + '/' + data.realName)
       }
       callback(urls)

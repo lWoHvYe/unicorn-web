@@ -51,12 +51,11 @@ export default {
         uploadImage: {
           async customUpload(file, insertFn) {
             try {
-              const res = await upload(store.getters.imagesUploadApi, file)
-              const data = res.data
+              const data = await upload(store.getters.imagesUploadApi, file)
               const url = store.getters.baseApi + '/file/' + data.type + '/' + data.realName
               insertFn(url, data.name || '', url)
             } catch (e) {
-              // 上传失败时由 axios 拦截器统一提示
+              // 上传失败时由 request 拦截器统一提示
             }
           }
         }

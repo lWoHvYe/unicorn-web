@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css'
-import ElementPlus from 'element-plus'
+import ElementPlus, { ElNotification } from 'element-plus'
 import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
@@ -28,6 +28,16 @@ import { registerElementIcons } from './plugins/element-icons'
 import highlight from './plugins/highlight'
 
 const app = createApp(App)
+
+app.config.errorHandler = (err, instance, info) => {
+  // 避免组件渲染异常导致白屏且无任何提示
+  console.error('[Vue error]', err, info)
+  ElNotification.error({
+    title: '页面发生错误',
+    message: (err && err.message) || '请刷新页面后重试',
+    duration: 5000
+  })
+}
 
 app.use(store)
 app.use(router)

@@ -52,41 +52,60 @@ export default {
     // 初始化后即建立连接
     this.initWebSocket()
   },
+  beforeUnmount() {
+    if (this.websock) {
+      this.websock.onerror = null
+      this.websock.onmessage = null
+      this.websock.close()
+      this.websock = null
+    }
+  },
   methods: {
     handleClickOutside() {
       this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
     },
     // 4 webSocket
     initWebSocket() {
-      const wsUri = import.meta.env.VUE_APP_WS_API + '/webSocket/sysMember'
-      this.websock = new WebSocket(wsUri)
+      const wsBase = import.meta.env.VUE_APP_WS_API
+      if (!wsBase) {
+        return
+      }
+      try {
+        this.websock = new WebSocket(wsBase.replace(/\/$/, '') + '/webSocket/sysMember')
+      } catch (e) {
+        return
+      }
       this.websock.onerror = this.webSocketOnError
       this.websock.onmessage = this.webSocketOnMessage
     },
-    webSocketOnError(e) {
+    webSocketOnError() {
       this.$notify({
         title: 'WebSocket连接发生错误',
         type: 'error',
-        duration: 0
+        duration: 5000
       })
     },
     webSocketOnMessage(e) {
-      const data = JSON.parse(e.data)
+      let data
+      try {
+        data = JSON.parse(e.data)
+      } catch (error) {
+        return
+      }
+      // 不使用 dangerouslyUseHTMLString，后端消息按纯文本渲染，避免 XSS
       if (data.msgType === 'INFO') {
         this.$notify({
           title: '系统通知 🦄️',
-          message: data.msg,
+          message: String(data.msg || ''),
           type: 'success',
-          dangerouslyUseHTMLString: true,
           duration: 5500
         })
       } else if (data.msgType === 'ERROR') {
         this.$notify({
           title: '系统通知 ❌',
-          message: data.msg,
-          dangerouslyUseHTMLString: true,
+          message: String(data.msg || ''),
           type: 'error',
-          duration: 0
+          duration: 5000
         })
       }
     }

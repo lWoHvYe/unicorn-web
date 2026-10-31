@@ -13,7 +13,7 @@ export default {
   },
   data() {
     return {
-      height: document.documentElement.clientHeight - (84 + 22) + 'px;',
+      height: document.documentElement.clientHeight - (84 + 22) + 'px',
       loading: true
     }
   },
@@ -21,10 +21,13 @@ export default {
     setTimeout(() => {
       this.loading = false
     }, 230)
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - (84 + 22) + 'px;'
+    this.__resizeHandler = () => {
+      this.height = document.documentElement.clientHeight - (84 + 22) + 'px'
     }
+    window.addEventListener('resize', this.__resizeHandler)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.__resizeHandler)
   }
 }
 </script>

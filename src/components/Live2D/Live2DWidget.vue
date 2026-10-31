@@ -129,8 +129,7 @@ export default {
       }
     },
     async selectModel(modelCdn) {
-      // 清除"上次关闭"状态，避免 initWidget 只显示一个不显眼的召回按钮
-      localStorage.removeItem('waifu-display')
+      // 不再强制清除 waifu-display：尊重用户上一次关闭看板娘的选择
       let list = null
       try {
         const response = await fetch(`${modelCdn}model_list.json`)

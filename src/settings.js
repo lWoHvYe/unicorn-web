@@ -32,9 +32,13 @@ const settings = {
    */
   TokenKey: 'EL-ADMIN-TOEKN',
   /**
-   * @description 请求超时时间，毫秒（默认2分钟）
+   * @description 默认请求超时时间，毫秒（30秒；导出/部署等长任务使用 longTimeout）
    */
-  timeout: 1200000,
+  timeout: 30000,
+  /**
+   * @description 长任务请求超时时间，毫秒（5分钟）
+   */
+  longTimeout: 300000,
   /**
    * @description 是否显示logo
    */

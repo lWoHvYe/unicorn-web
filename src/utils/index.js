@@ -175,16 +175,6 @@ export function param2Obj(url) {
 }
 
 /**
- * @param {string} val
- * @returns {string}
- */
-export function html2Text(val) {
-  const div = document.createElement('div')
-  div.innerHTML = val
-  return div.textContent || div.innerText
-}
-
-/**
  * Merges two objects, giving the last one precedence
  * @param {Object} target
  * @param {(Object|Array)} source
@@ -386,4 +376,6 @@ export function downloadFile(obj, name, suffix) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  // 释放 blob URL，避免长时间停留在页面时持续占用内存
+  setTimeout(() => window.URL.revokeObjectURL(url), 0)
 }

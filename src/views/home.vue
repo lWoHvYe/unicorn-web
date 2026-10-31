@@ -26,7 +26,7 @@
         </el-col>
       </el-row>
     </div>
-    <Live2DWidget />
+    <Live2DWidget v-if="enableLive2D" />
   </div>
 </template>
 
@@ -71,6 +71,8 @@ export default {
   },
   data() {
     return {
+      // 第三方看板娘默认关闭；需要时在环境变量中设置 VITE_ENABLE_LIVE2D='true'
+      enableLive2D: import.meta.env.VITE_ENABLE_LIVE2D === 'true',
       lineChartData: lineChartData.newVisitis
     }
   },

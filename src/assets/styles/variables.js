@@ -2,7 +2,7 @@
 // SCSS 的 webpack `:export` 在 Vite 下不可用，因此把需要在 JS 中读取的变量放在这里。
 export default {
   menuText: '#bfcbd9',
-  menuActiveText: '#409EFF',
+  menuActiveText: '#1890ff',
   subMenuActiveText: '#f4f4f5',
   menuBg: '#304156',
   menuHover: '#263445',

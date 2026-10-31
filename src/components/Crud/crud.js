@@ -1,6 +1,7 @@
 import { initData, download } from '@/api/data'
 import { parseTime, downloadFile } from '@/utils/index'
 import { markRaw, reactive } from 'vue'
+import { ElNotification } from 'element-plus'
 
 /**
  * CRUD配置
@@ -229,10 +230,6 @@ function CRUD(options) {
       if (editStatus === CRUD.STATUS.PREPARED) {
         callVmHook(crud, CRUD.HOOK.afterEditCancel, crud.form)
       }
-      // 清除表单验证
-      if (crud.findVM('form').$refs['form']) {
-        crud.findVM('form').$refs['form'].clearValidate()
-      }
     },
     /**
      * 提交新增/编辑
@@ -241,7 +238,12 @@ function CRUD(options) {
       if (!callVmHook(crud, CRUD.HOOK.beforeValidateCU)) {
         return
       }
-      crud.findVM('form').$refs['form'].validate(valid => {
+      const formVM = crud.findVM('form')
+      const formEl = formVM && formVM.$refs && formVM.$refs['form']
+      if (!formEl || typeof formEl.validate !== 'function') {
+        return
+      }
+      formEl.validate(valid => {
         if (!valid) {
           return
         }
@@ -404,20 +406,24 @@ function CRUD(options) {
      * @param {Array} data 数据
      */
     resetForm(data) {
-      const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
+      const formVM = crud.findVM('form')
+      const form = data || (typeof crud.defaultForm === 'object'
+        ? JSON.parse(JSON.stringify(crud.defaultForm))
+        : crud.defaultForm.apply(formVM || crud))
       const crudFrom = crud.form
 
-      for (const key in form) {
-
-        if (crudFrom.hasOwnProperty(key)) {
-          crudFrom[key] = form[key]
-        } else {
-          crudFrom[key] = form[key]
+      // 清理旧表单中不存在于新表单的字段，避免新增/编辑切换时残留上一次的值
+      Object.keys(crudFrom).forEach(key => {
+        if (!(key in form)) {
+          delete crudFrom[key]
         }
+      })
+      for (const key in form) {
+        crudFrom[key] = form[key]
       }
-      // add by ghl 2020-10-04  页面重复添加信息时，下拉框的校验会存在，需要找工取消
-      if (crud.findVM('form').$refs['form']) {
-        crud.findVM('form').$refs['form'].clearValidate()
+      // 页面重复添加信息时，下拉框的校验会残留，需要手动清除
+      if (formVM && formVM.$refs && formVM.$refs['form']) {
+        formVM.$refs['form'].clearValidate()
       }
     },
     /**
@@ -444,6 +450,9 @@ function CRUD(options) {
      * @param {Number | String} id 数据项id
      */
     getDataStatus(id) {
+      if (!crud.dataStatus[id]) {
+        crud.dataStatus[id] = { delete: 0, edit: 0 }
+      }
       return crud.dataStatus[id]
     },
     /**
@@ -498,10 +507,20 @@ function CRUD(options) {
       }
     },
     findVM(type) {
-      return crud.vms.find(vm => vm && vm.type === type).vm
+      const item = crud.vms.find(vm => vm && vm.type === type)
+      return item ? item.vm : undefined
     },
     notify(title, type = CRUD.NOTIFICATION_TYPE.INFO) {
-      crud.vms[0].vm.$notify({
+      const presenter = crud.vms[0] && crud.vms[0].vm
+      if (presenter && presenter.$notify) {
+        presenter.$notify({
+          title,
+          type,
+          duration: 2500
+        })
+        return
+      }
+      ElNotification({
         title,
         type,
         duration: 2500
@@ -514,7 +533,8 @@ function CRUD(options) {
       return data[this.idField]
     },
     getTable() {
-      return this.findVM('presenter').$refs.table
+      const presenter = this.findVM('presenter')
+      return presenter && presenter.$refs ? presenter.$refs.table : undefined
     },
     attchTable() {
       const table = this.getTable()
@@ -680,7 +700,7 @@ function presenter(crud) {
         this.$crud[ele.tag] = ele
         ele.registerVM('presenter', this, 0)
       })
-      this.crud = this.$crud['defalut'] || cruds[0]
+      this.crud = this.$crud['default'] || cruds[0]
     },
     methods: {
       parseTime

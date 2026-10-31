@@ -236,7 +236,6 @@ export default {
       }
     }
     return {
-      height: document.documentElement.clientHeight - 180 + 'px;',
       deptName: '', depts: [], deptDatas: [], jobs: [], level: 3, roles: [],
       jobDatas: [], roleDatas: [], // 多选时使用
       defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
@@ -276,12 +275,6 @@ export default {
   created() {
     this.crud.msg.add = '新增成功，默认密码：123456'
   },
-  mounted: function() {
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 180 + 'px;'
-    }
-  },
   methods: {
     // 禁止输入空格
     keydown(e) {
@@ -304,11 +297,10 @@ export default {
       })
     },
     deleteTag(value) {
-      userRoles.forEach(function(data, index) {
-        if (data.id === value) {
-          userRoles.splice(index, value)
-        }
-      })
+      const index = userRoles.findIndex(data => data.id === value)
+      if (index !== -1) {
+        userRoles.splice(index, 1)
+      }
     },
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {

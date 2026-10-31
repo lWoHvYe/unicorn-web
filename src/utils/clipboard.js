@@ -1,36 +1,33 @@
-import Clipboard from 'clipboard'
 import { ElMessage } from 'element-plus'
 
-function clipboardSuccess() {
-  ElMessage({
-    message: 'Copy successfully',
-    type: 'success',
-    duration: 1500
-  })
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  return copied
 }
 
-function clipboardError() {
-  ElMessage({
-    message: 'Copy failed',
-    type: 'error'
-  })
-}
-
-export default function handleClipboard(text, event) {
-  const clipboard = new Clipboard(event.target, {
-    text: () => text
-  })
-  clipboard.on('success', () => {
-    clipboardSuccess()
-    clipboard.off('error')
-    clipboard.off('success')
-    clipboard.destroy()
-  })
-  clipboard.on('error', () => {
-    clipboardError()
-    clipboard.off('error')
-    clipboard.off('success')
-    clipboard.destroy()
-  })
-  clipboard.onClick(event)
+export default async function handleClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+    } else if (!fallbackCopy(text)) {
+      throw new Error('copy failed')
+    }
+    ElMessage({
+      message: 'Copy successfully',
+      type: 'success',
+      duration: 1500
+    })
+  } catch (e) {
+    ElMessage({
+      message: 'Copy failed',
+      type: 'error'
+    })
+  }
 }

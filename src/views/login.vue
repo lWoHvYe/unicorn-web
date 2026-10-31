@@ -6,16 +6,15 @@
       </h3>
       <el-form-item prop="username">
         <!--   v-model是View和Model间的双向绑定，v-text,v-html,v-bind都是单向绑定     -->
-        <el-input v-model="loginForm.username" type="text" auto-complete="off" placeholder="账号">
+        <el-input v-model="loginForm.username" type="text" autocomplete="username" placeholder="账号">
           <template #prefix><svg-icon  icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
       <el-form-item prop="password">
-        <el-input v-model="loginForm.password" type="password" auto-complete="off" placeholder="密码" @keyup.enter="handleLogin">
+        <el-input v-model="loginForm.password" type="password" autocomplete="current-password" placeholder="密码" @keyup.enter="handleLogin">
           <template #prefix><svg-icon  icon-class="password" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <button @click="useVerify">调用验证组件</button>
       <el-checkbox v-model="loginForm.rememberMe" style="margin:0 0 25px 0;">
         记住我
       </el-checkbox>
@@ -47,7 +46,6 @@
 import { encrypt } from '@/utils/rsaEncrypt'
 import Config from '@/settings'
 import Cookies from 'js-cookie'
-import qs from 'qs'
 import Background from '@/assets/images/background.jpg'
 import Verify from '@/views/components/verifition/Verify'
 
@@ -57,14 +55,11 @@ export default {
   data() {
     return {
       Background: Background,
-      codeUrl: '',
-      cookiePass: '',
       loginForm: {
-        username: 'admin',
-        password: '123456',
+        username: '',
+        password: '',
         rememberMe: false,
-        captchaVerification: '',
-        uuid: ''
+        captchaVerification: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', message: '用户名不能为空' }],
@@ -77,14 +72,11 @@ export default {
   watch: {
     $route: {
       handler: function(route) {
-        const data = route.query
-        if (data && data.redirect) {
-          this.redirect = data.redirect
-          delete data.redirect
-          if (JSON.stringify(data) !== '{}') {
-            this.redirect = this.redirect + '&' + qs.stringify(data, { indices: false })
-          }
-        }
+        const redirect = route.query && route.query.redirect
+        // 只接受站内绝对路径，避免把 redirect 当成外部地址
+        this.redirect = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+          ? redirect
+          : undefined
       },
       immediate: true
     }
@@ -98,58 +90,59 @@ export default {
   methods: {
     verifySuccess(params) {
       // params 返回的二次验证参数, 和登录参数一起回传给登录接口，方便后台进行二次验证
-      console.log(params)
       this.loginForm.captchaVerification = params.captchaVerification
-    },
-    useVerify() {
-      this.$refs.verify.show()
     },
     getCookie() {
       const username = Cookies.get('username')
-      let password = Cookies.get('password')
       const rememberMe = Cookies.get('rememberMe')
-      // 保存cookie里面的加密后的密码
-      this.cookiePass = password === undefined ? '' : password
-      password = password === undefined ? this.loginForm.password : password
-      this.loginForm = {
-        username: username === undefined ? this.loginForm.username : username,
-        password: password,
-        rememberMe: rememberMe === undefined ? false : Boolean(rememberMe),
-        captchaVerification: ''
-      }
+      this.loginForm.username = username === undefined ? '' : username
+      // Cookie 中只保存用户名和“记住我”标记，不再持久化密码密文
+      this.loginForm.rememberMe = rememberMe === 'true'
     },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
+        if (!valid) {
+          return false
+        }
+        const password = encrypt(this.loginForm.password)
+        if (!password) {
+          this.$message.error('密码加密失败，请重试')
+          return false
+        }
         const user = {
           username: this.loginForm.username,
-          password: this.loginForm.password,
+          password,
           rememberMe: this.loginForm.rememberMe,
           captchaVerification: this.loginForm.captchaVerification
         }
-        if (user.password !== this.cookiePass) {
-          user.password = encrypt(user.password)
-        }
-        if (valid) {
-          this.loading = true
-          if (user.rememberMe) {
-            Cookies.set('username', user.username, { expires: Config.passCookieExpires })
-            Cookies.set('password', user.password, { expires: Config.passCookieExpires })
-            Cookies.set('rememberMe', user.rememberMe, { expires: Config.passCookieExpires })
-          } else {
-            Cookies.remove('username')
-            Cookies.remove('password')
-            Cookies.remove('rememberMe')
-          }
-          this.$store.dispatch('Login', user).then(() => {
-            this.loading = false
-            this.$router.push({ path: this.redirect || '/' })
-          }).catch(() => {
-            this.loading = false
-          })
+        this.loading = true
+        if (user.rememberMe) {
+          Cookies.set('username', user.username, { expires: Config.passCookieExpires })
+          Cookies.set('rememberMe', 'true', { expires: Config.passCookieExpires })
         } else {
-          console.log('error submit!!')
-          return false
+          Cookies.remove('username')
+          Cookies.remove('rememberMe')
         }
+        this.$store.dispatch('Login', user).then(() => {
+          this.loading = false
+          const redirect = this.redirect && this.redirect.startsWith('/') && !this.redirect.startsWith('//')
+            ? this.redirect
+            : '/'
+          // 使用字符串形式，保留 redirect 中的 query/hash
+          this.$router.push(redirect)
+        }).catch(error => {
+          this.loading = false
+          this.loginForm.captchaVerification = ''
+          if (this.$refs.verify && this.$refs.verify.refresh) {
+            this.$refs.verify.refresh()
+          }
+          // 后端要求二次验证时，自动打开验证码，避免功能不可达
+          const data = error && error.response && error.response.data
+          const message = data && (data.message || data.description)
+          if (/验证|captcha/i.test(String(message || '')) && this.$refs.verify) {
+            this.$refs.verify.show()
+          }
+        })
       })
     },
     point() {

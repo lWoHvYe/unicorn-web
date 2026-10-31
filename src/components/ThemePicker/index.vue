@@ -11,7 +11,7 @@
 import Cookies from 'js-cookie'
 import { applyTheme } from '@/utils/theme'
 
-const ORIGINAL_THEME = '#409EFF' // default color
+const ORIGINAL_THEME = '#1890ff' // default color
 const STORAGE_KEY = 'theme'
 
 export default {

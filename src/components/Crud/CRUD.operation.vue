@@ -194,7 +194,19 @@ export default {
     },
     handleCheckAllChange(val) {
       if (val === false) {
-        this.allColumnsSelected = true
+        // 至少保留一列可见，避免 Element Plus 表格没有任何列
+        const visibleColumns = this.tableColumns.filter(column => column.visible)
+        if (visibleColumns.length <= 1) {
+          this.allColumnsSelected = true
+          this.allColumnsSelectedIndeterminate = false
+          this.crud.notify('请至少选择一列', CRUD.NOTIFICATION_TYPE.WARNING)
+          return
+        }
+        visibleColumns.slice(1).forEach(column => {
+          column.visible = false
+          this.updateColumnVisible(column)
+        })
+        this.refreshCheckState()
         return
       }
       this.tableColumns.forEach(column => {
@@ -215,8 +227,9 @@ export default {
       })
       if (selectedCount === 0) {
         this.crud.notify('请至少选择一列', CRUD.NOTIFICATION_TYPE.WARNING)
-        this.$nextTick(function() {
+        this.$nextTick(() => {
           item.visible = true
+          this.refreshCheckState()
         })
         return
       }

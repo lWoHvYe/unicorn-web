@@ -20,7 +20,6 @@ selenium-debug.log
 *.local
 *.iml
 
-package-lock.json
 yarn.lock
 
 # local npm cache used by agents

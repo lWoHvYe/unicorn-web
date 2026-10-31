@@ -9,18 +9,24 @@
         <rich-editor v-model="editorContent" height="420px" />
       </el-col>
       <el-col :xs="24" :sm="24" :md="9" :lg="9" :xl="9">
-        <div v-html="editorContent" />
+        <div v-html="safeContent" />
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script>
+import DOMPurify from 'dompurify'
 import RichEditor from '@/components/RichEditor'
 
 export default {
   name: 'Editor',
   components: { RichEditor },
+  computed: {
+    safeContent() {
+      return DOMPurify.sanitize(this.editorContent)
+    }
+  },
   data() {
     return {
       editorContent: `

@@ -19,7 +19,7 @@ function htmlTitle() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, rootDir, '')
   const proxy = {}
-  const prefixes = ['/api', '/auth', '/captcha']
+  const prefixes = ['/api', '/auth', '/captcha', '/file', '/avatar']
   prefixes.forEach(prefix => {
     proxy[prefix] = {
       target: env.VUE_APP_BASE_API || 'https://localhost:8081',
@@ -62,7 +62,6 @@ export default defineConfig(({ mode }) => {
         'echarts',
         'echarts-gl',
         'echarts-wordcloud',
-        'xlsx',
         'codemirror',
         'jsencrypt',
         'fuse.js',
@@ -77,26 +76,9 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       assetsDir: 'static',
       sourcemap: false,
-      chunkSizeWarningLimit: 2500,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) {
-              return
-            }
-            if (id.includes('element-plus') || id.includes('@element-plus')) {
-              return 'chunk-element-plus'
-            }
-            if (id.includes('echarts')) {
-              return 'chunk-echarts'
-            }
-            if (id.includes('md-editor-v3') || id.includes('@wangeditor') || id.includes('codemirror')) {
-              return 'chunk-editor'
-            }
-            return 'chunk-vendor'
-          }
-        }
-      }
+      // 大 chunk 只在对应路由懒加载时下载；首屏预算由 scripts/check-bundle.mjs 校验，
+      // 不再用 chunkSizeWarningLimit 掩盖首屏问题。
+      chunkSizeWarningLimit: 3000
     },
     define: {
       __VUE_OPTIONS_API__: true,

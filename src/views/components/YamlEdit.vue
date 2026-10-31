@@ -194,10 +194,13 @@ export default {
     }
   },
   mounted() {
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 210 + 'px'
+    this.__resizeHandler = () => {
+      this.height = document.documentElement.clientHeight - 210 + 'px'
     }
+    window.addEventListener('resize', this.__resizeHandler)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.__resizeHandler)
   }
 }
 </script>
