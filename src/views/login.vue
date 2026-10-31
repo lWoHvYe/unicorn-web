@@ -15,9 +15,19 @@
           <template #prefix><svg-icon  icon-class="password" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe" style="margin:0 0 25px 0;">
-        记住我
-      </el-checkbox>
+      <div class="login-options">
+        <el-checkbox v-model="loginForm.rememberMe">
+          记住我
+        </el-checkbox>
+        <el-link
+          type="primary"
+          :underline="false"
+          class="verify-trigger"
+          @click="showVerify"
+        >
+          {{ loginForm.captchaVerification ? '已验证，重新验证' : '安全验证' }}
+        </el-link>
+      </div>
       <el-form-item style="width:100%;">
         <el-button :loading="loading" size="default" type="primary" style="width:100%;" @click.prevent="handleLogin">
           <span v-if="!loading">登 录</span>
@@ -88,6 +98,11 @@ export default {
     this.point()
   },
   methods: {
+    showVerify() {
+      if (this.$refs.verify) {
+        this.$refs.verify.show()
+      }
+    },
     verifySuccess(params) {
       // params 返回的二次验证参数, 和登录参数一起回传给登录接口，方便后台进行二次验证
       this.loginForm.captchaVerification = params.captchaVerification
@@ -195,6 +210,17 @@ export default {
     width: 14px;
     margin-left: 2px;
   }
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.verify-trigger {
+  font-size: 13px;
 }
 
 .login-tip {
