@@ -263,6 +263,8 @@ Vue 3 迁移后的关键点：
 3. **Live2D 与 WebSocket**：Live2D 默认关闭（`VITE_ENABLE_LIVE2D='false'`），避免从第三方 CDN 动态执行脚本；启用时才会加载 `live2d-widgets` 与模型 CDN，可用 `VITE_LIVE2D_BASE`、`VITE_LIVE2D_MODEL_CDN` 覆盖地址。WebSocket 消息按纯文本渲染，不再使用 `dangerouslyUseHTMLString`；Layout 启动时连接 `VUE_APP_WS_API`，后端未启动时出现连接错误通知属预期。
 4. **构建分包与首屏预算**：已移除自定义 `manualChunks`，由 Rolldown 自动按路由/模块拆分；`npm run check:bundle` 校验 `dist/index.html` 首屏资源（当前约 0.95MB raw / 0.30MB gzip），禁止 editor/echarts chunk 进入首屏。首页 ECharts 已改为按需注册 + 异步组件，仪表盘图表包约从 1.2MB 降到 0.9MB；Element Plus 已改为按需引入。
 5. **Element 图标与 resolver**：`registerElementIcons` 仍注册模板字符串里用到的图标别名；`unplugin-vue-components` 会把形如 `<el-icon-xxx>` 的标签解析为 `@element-plus/icons-vue` 组件。注意不要给本地组件起 `elXxx` 这类名字（例如 `elFrame` 会被误判为 Element Plus 组件），本项目已改为 `AppFrame`。图标模块 `@element-plus/icons-vue` 目前仍会整体进入首屏 chunk（约 170KB），这是后续可继续优化的点。
+   - dev server 的 `optimizeDeps.include` 已预热模板中使用的 Element Plus 组件 `style/css`；**新增 `el-*` 组件时要同步补充 `vite.config.js` 的 `elementPlusComponents`**，否则首次进入该页面时 Vite 会重新预构建依赖并触发整页 reload（仅开发环境）。
+   - `element-plus/es`、locale 和 Message/MessageBox/Notification/Loading 的样式入口也已加入预构建，避免首屏首次访问时 reload。
 6. **列表 mixin**：`src/mixins/table.js` 只负责列表/分页/导出，不再包含增删改表单；`@crud/crud` 负责完整 CRUD 页面。4 个历史页面（用户中心、定时任务日志、代码生成配置、系统还原）已迁移到 `table.js`。
 7. **测试与 CI**：已加入 Vitest 单元测试（`npm run test:unit`）与 GitHub Actions；提交/合并前建议执行 `npm run verify`。E2E 仍暂缺。
 8. **`build:stage`**：`.env.staging` 是占位配置（默认 `/server-api`），部署前按实际 staging 环境修改。

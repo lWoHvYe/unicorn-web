@@ -11,6 +11,57 @@ const srcDir = fileURLToPath(new URL('./src', import.meta.url))
 const crudDir = fileURLToPath(new URL('./src/components/Crud', import.meta.url))
 const elementPlusVersion = createRequire(import.meta.url)('element-plus/package.json').version
 
+// 模板中实际使用的 Element Plus 组件。新增 el-* 组件时请同步补充，
+// 否则 dev server 在首次切换菜单时会发现新的 style/css 依赖并触发整页 reload。
+const elementPlusComponents = [
+  'alert',
+  'backtop',
+  'breadcrumb',
+  'breadcrumb-item',
+  'button',
+  'button-group',
+  'card',
+  'checkbox',
+  'col',
+  'color-picker',
+  'config-provider',
+  'date-picker',
+  'dialog',
+  'dropdown',
+  'dropdown-item',
+  'dropdown-menu',
+  'form',
+  'form-item',
+  'input',
+  'input-number',
+  'link',
+  'menu',
+  'menu-item',
+  'option',
+  'pagination',
+  'popover',
+  'progress',
+  'radio',
+  'radio-button',
+  'radio-group',
+  'row',
+  'scrollbar',
+  'select',
+  'sub-menu',
+  'switch',
+  'tab-pane',
+  'table',
+  'table-column',
+  'tabs',
+  'tag',
+  'tooltip',
+  'tree',
+  'tree-select',
+  'upload'
+]
+const elementPlusStyleDeps = ['base', ...elementPlusComponents]
+  .map(name => `element-plus/es/components/${name}/style/css`)
+
 function htmlTitle() {
   return {
     name: 'html-title',
@@ -73,7 +124,15 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: [
+        // 预热按需引入的 Element Plus 组件样式，避免 dev 切换菜单时才优化依赖并 reload
+        ...elementPlusStyleDeps,
         'element-plus',
+        'element-plus/es',
+        'element-plus/es/locale/lang/zh-cn',
+        'element-plus/es/components/message/style/css',
+        'element-plus/es/components/message-box/style/css',
+        'element-plus/es/components/notification/style/css',
+        'element-plus/es/components/loading/style/css',
         '@element-plus/icons-vue',
         'echarts',
         'echarts-gl',
